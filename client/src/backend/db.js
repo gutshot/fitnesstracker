@@ -1,0 +1,365 @@
+import { Database } from './sqlite.js';
+
+// Single shared handle. The backend modules import this and call it exactly
+// like better-sqlite3; index.js attaches the real sql.js database at startup
+// (and re-attaches on backup import), then runs migrate().
+const db = new Database();
+export default db;
+
+// Schema + column migrations. Idempotent — safe to run on every open, and on an
+// imported database file from any earlier (server-era) version.
+export function migrate() {
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS users (
+      id            INTEGER PRIMARY KEY AUTOINCREMENT,
+      username      TEXT    NOT NULL UNIQUE,
+      name          TEXT    NOT NULL,
+      glyph         TEXT    NOT NULL DEFAULT '🏋️',
+      password_hash TEXT    NOT NULL,
+      created_at    TEXT    NOT NULL DEFAULT (datetime('now'))
+    );
+
+    CREATE TABLE IF NOT EXISTS config (
+      key   TEXT PRIMARY KEY,
+      value TEXT NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS exercises (
+      id               INTEGER PRIMARY KEY AUTOINCREMENT,
+      name             TEXT    NOT NULL UNIQUE,
+      muscle_group     TEXT    NOT NULL,
+      equipment        TEXT    NOT NULL,
+      default_increment REAL   NOT NULL DEFAULT 2.5
+    );
+
+    CREATE TABLE IF NOT EXISTS user_equipment (
+      equipment TEXT PRIMARY KEY
+    );
+
+    CREATE TABLE IF NOT EXISTS schedule (
+      id          INTEGER PRIMARY KEY AUTOINCREMENT,
+      day_of_week INTEGER NOT NULL,
+      exercise_id INTEGER NOT NULL REFERENCES exercises(id) ON DELETE CASCADE,
+      set_count   INTEGER NOT NULL DEFAULT 3,
+      position    INTEGER NOT NULL DEFAULT 0
+    );
+
+    CREATE TABLE IF NOT EXISTS set_targets (
+      id          INTEGER PRIMARY KEY AUTOINCREMENT,
+      exercise_id INTEGER NOT NULL REFERENCES exercises(id) ON DELETE CASCADE,
+      set_num     INTEGER NOT NULL,
+      weight      REAL    NOT NULL,
+      reps        INTEGER NOT NULL,
+      valid_from  TEXT    NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS sessions (
+      id          INTEGER PRIMARY KEY AUTOINCREMENT,
+      date        TEXT,
+      week_num    INTEGER,
+      session_dow INTEGER,
+      pain        TEXT,
+      recovery    TEXT,
+      pump        TEXT,
+      checked_in  INTEGER NOT NULL DEFAULT 0,
+      plan_id     INTEGER REFERENCES workout_plans(id),
+      user_id     INTEGER REFERENCES users(id),
+      UNIQUE(plan_id, week_num, session_dow, user_id)
+    );
+
+    CREATE TABLE IF NOT EXISTS logged_sets (
+      id          INTEGER PRIMARY KEY AUTOINCREMENT,
+      session_id  INTEGER NOT NULL REFERENCES sessions(id) ON DELETE CASCADE,
+      exercise_id INTEGER NOT NULL REFERENCES exercises(id),
+      set_num     INTEGER NOT NULL,
+      reps_done   INTEGER,
+      skipped     INTEGER NOT NULL DEFAULT 0,
+      weight_used REAL
+    );
+
+
+    CREATE TABLE IF NOT EXISTS workout_plans (
+      id         INTEGER PRIMARY KEY AUTOINCREMENT,
+      name       TEXT    NOT NULL,
+      is_active  INTEGER NOT NULL DEFAULT 0,
+      started_at TEXT,
+      created_at TEXT    NOT NULL DEFAULT (date('now'))
+    );
+
+    CREATE TABLE IF NOT EXISTS plan_days (
+      plan_id     INTEGER NOT NULL REFERENCES workout_plans(id) ON DELETE CASCADE,
+      day_of_week INTEGER NOT NULL,
+      PRIMARY KEY (plan_id, day_of_week)
+    );
+  `);
+
+  // ── Column migrations ─────────────────────────────────────────────────────────
+
+  const cols = t => db.prepare(`PRAGMA table_info(${t})`).all().map(c => c.name);
+
+  if (!cols('exercises').includes('is_custom'))
+    db.exec('ALTER TABLE exercises ADD COLUMN is_custom INTEGER NOT NULL DEFAULT 0');
+  if (!cols('schedule').includes('plan_id'))
+    db.exec('ALTER TABLE schedule ADD COLUMN plan_id INTEGER REFERENCES workout_plans(id) ON DELETE CASCADE');
+  if (!cols('sessions').includes('plan_id'))
+    db.exec('ALTER TABLE sessions ADD COLUMN plan_id INTEGER REFERENCES workout_plans(id)');
+  if (!cols('workout_plans').includes('week_count'))
+    db.exec('ALTER TABLE workout_plans ADD COLUMN week_count INTEGER NOT NULL DEFAULT 4');
+  if (!cols('set_targets').includes('plan_id')) {
+    db.exec('ALTER TABLE set_targets ADD COLUMN plan_id INTEGER REFERENCES workout_plans(id)');
+    const activePlan = db.prepare('SELECT id FROM workout_plans WHERE is_active = 1').get();
+    if (activePlan) {
+      db.prepare(`
+        UPDATE set_targets SET plan_id = ?
+        WHERE plan_id IS NULL
+        AND exercise_id IN (SELECT exercise_id FROM schedule WHERE plan_id = ?)
+      `).run(activePlan.id, activePlan.id);
+    }
+  }
+
+  // ── user_id on workout_plans ──────────────────────────────────────────────────
+
+  if (!cols('workout_plans').includes('user_id'))
+    db.exec('ALTER TABLE workout_plans ADD COLUMN user_id INTEGER REFERENCES users(id)');
+
+  // ── Recreate sessions with per-user uniqueness ────────────────────────────────
+  // Original table had UNIQUE(date); multi-user needs UNIQUE(date, user_id).
+
+  if (!cols('sessions').includes('user_id')) {
+    db.pragma('foreign_keys = OFF');
+    db.exec(`
+      CREATE TABLE sessions_new (
+        id         INTEGER PRIMARY KEY AUTOINCREMENT,
+        date       TEXT    NOT NULL,
+        pain       TEXT,
+        recovery   TEXT,
+        pump       TEXT,
+        checked_in INTEGER NOT NULL DEFAULT 0,
+        plan_id    INTEGER REFERENCES workout_plans(id),
+        user_id    INTEGER REFERENCES users(id),
+        UNIQUE(date, user_id)
+      );
+      INSERT INTO sessions_new (id, date, pain, recovery, pump, checked_in, plan_id)
+        SELECT id, date, pain, recovery, pump, checked_in, plan_id FROM sessions;
+      DROP TABLE sessions;
+      ALTER TABLE sessions_new RENAME TO sessions;
+    `);
+    db.pragma('foreign_keys = ON');
+  }
+
+  // ── Recreate sessions with week_num / session_dow ────────────────────────────
+  // Replaces date-based identity with position-based (week_num, session_dow).
+
+  if (!cols('sessions').includes('week_num')) {
+    db.pragma('foreign_keys = OFF');
+
+    const existing = db.prepare('SELECT * FROM sessions').all();
+    const planMap  = {};
+    for (const p of db.prepare('SELECT id, started_at FROM workout_plans').all())
+      planMap[p.id] = p;
+
+    function dowOfDate(s) {
+      const [y, m, d] = s.split('-').map(Number);
+      return (new Date(Date.UTC(y, m - 1, d)).getUTCDay() + 6) % 7;
+    }
+    function weekNumOfDate(dateStr, startedAt) {
+      const [y1, m1, d1] = dateStr.split('-').map(Number);
+      const [y2, m2, d2] = startedAt.split('-').map(Number);
+      const sessMs  = Date.UTC(y1, m1 - 1, d1);
+      const startMs = Date.UTC(y2, m2 - 1, d2);
+      const base    = startMs - ((new Date(startMs).getUTCDay() + 6) % 7) * 86400000;
+      return Math.max(1, Math.floor((sessMs - base) / (7 * 86400000)) + 1);
+    }
+
+    db.exec(`
+      CREATE TABLE sessions_new (
+        id          INTEGER PRIMARY KEY AUTOINCREMENT,
+        date        TEXT,
+        week_num    INTEGER,
+        session_dow INTEGER,
+        pain        TEXT,
+        recovery    TEXT,
+        pump        TEXT,
+        checked_in  INTEGER NOT NULL DEFAULT 0,
+        plan_id     INTEGER REFERENCES workout_plans(id),
+        user_id     INTEGER REFERENCES users(id),
+        UNIQUE(plan_id, week_num, session_dow, user_id)
+      );
+    `);
+
+    const ins = db.prepare(`
+      INSERT OR IGNORE INTO sessions_new
+        (id, date, week_num, session_dow, pain, recovery, pump, checked_in, plan_id, user_id)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+    db.transaction(() => {
+      for (const s of existing) {
+        let weekNum = null, sessionDow = null;
+        if (s.date) {
+          sessionDow = dowOfDate(s.date);
+          const plan = s.plan_id ? planMap[s.plan_id] : null;
+          weekNum    = plan?.started_at ? weekNumOfDate(s.date, plan.started_at) : 1;
+        }
+        ins.run(s.id, s.date ?? null, weekNum, sessionDow,
+                s.pain, s.recovery, s.pump, s.checked_in,
+                s.plan_id ?? null, s.user_id ?? null);
+      }
+    })();
+
+    db.exec(`DROP TABLE sessions; ALTER TABLE sessions_new RENAME TO sessions;`);
+    db.pragma('foreign_keys = ON');
+  }
+
+  if (!cols('sessions').includes('unlocked'))
+    db.exec('ALTER TABLE sessions ADD COLUMN unlocked INTEGER NOT NULL DEFAULT 0');
+
+  // Distinguish user-entered starting suggestions from algorithm-computed targets.
+  if (!cols('set_targets').includes('is_suggestion'))
+    db.exec('ALTER TABLE set_targets ADD COLUMN is_suggestion INTEGER NOT NULL DEFAULT 0');
+
+  // ── set_targets.weight nullable ───────────────────────────────────────────────
+  // Earlier versions declared weight NOT NULL, forcing weight=0 when no prior
+  // target existed (e.g. a set that was only ever skipped). NULL is stored
+  // instead so the UI can distinguish "no recommendation yet" from a real 0 kg
+  // weight. Existing 0-weight rows on non-bodyweight exercises are cleared.
+  {
+    const _stW = db.prepare('PRAGMA table_info(set_targets)').all().find(c => c.name === 'weight');
+    if (_stW?.notnull === 1) {
+      db.pragma('foreign_keys = OFF');
+      db.exec(`
+        CREATE TABLE set_targets_new (
+          id            INTEGER PRIMARY KEY AUTOINCREMENT,
+          exercise_id   INTEGER NOT NULL REFERENCES exercises(id) ON DELETE CASCADE,
+          set_num       INTEGER NOT NULL,
+          weight        REAL,
+          reps          INTEGER NOT NULL,
+          valid_from    TEXT    NOT NULL,
+          plan_id       INTEGER REFERENCES workout_plans(id),
+          is_suggestion INTEGER NOT NULL DEFAULT 0
+        );
+        INSERT INTO set_targets_new
+               (id, exercise_id, set_num, weight, reps, valid_from, plan_id, is_suggestion)
+          SELECT st.id, st.exercise_id, st.set_num,
+                 CASE WHEN st.weight = 0 AND e.equipment != 'bodyweight' THEN NULL
+                      ELSE st.weight END,
+                 st.reps, st.valid_from, st.plan_id, COALESCE(st.is_suggestion, 0)
+          FROM set_targets st JOIN exercises e ON e.id = st.exercise_id;
+        DROP TABLE set_targets;
+        ALTER TABLE set_targets_new RENAME TO set_targets;
+      `);
+      db.pragma('foreign_keys = ON');
+    }
+  }
+
+  // Drop tables retired with the move to performance-based double progression:
+  // session_checkins (subjective pain/recovery/pump/intensity feedback) and
+  // muscle_group_settings (per-group rep range / speed — now per exercise).
+  db.exec('DROP TABLE IF EXISTS session_checkins');
+  db.exec('DROP TABLE IF EXISTS muscle_group_settings');
+
+  // Per-exercise rep range for double-progression. Seeded by exercise type.
+  // The exercises columns hold the shared default; per-user tweaks live in
+  // user_exercise_settings (below) and override the default for that user.
+  if (!cols('exercises').includes('rep_min'))
+    db.exec('ALTER TABLE exercises ADD COLUMN rep_min INTEGER NOT NULL DEFAULT 8');
+  if (!cols('exercises').includes('rep_max'))
+    db.exec('ALTER TABLE exercises ADD COLUMN rep_max INTEGER NOT NULL DEFAULT 12');
+
+  // Per-user overrides of an exercise's training parameters (rep range, weight
+  // increment, pause-weight flag). rep_min/rep_max/default_increment fall through
+  // to the exercises-table default when NULL. pause_weight, when 1, enables a
+  // weight cap: pause_cap_kg holds the ceiling (the heaviest set at activation) and
+  // the algorithm progresses weight up to but never past it. A legacy row with
+  // pause_weight=1 and pause_cap_kg NULL keeps the old reps-only freeze behaviour.
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS user_exercise_settings (
+      user_id           INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      exercise_id       INTEGER NOT NULL REFERENCES exercises(id) ON DELETE CASCADE,
+      rep_min           INTEGER,
+      rep_max           INTEGER,
+      default_increment REAL,
+      pause_weight      INTEGER NOT NULL DEFAULT 0,
+      PRIMARY KEY (user_id, exercise_id)
+    )
+  `);
+  if (!cols('user_exercise_settings').includes('pause_weight'))
+    db.exec('ALTER TABLE user_exercise_settings ADD COLUMN pause_weight INTEGER NOT NULL DEFAULT 0');
+  // Weight cap (kg) for a paused exercise — the algorithm progresses weight up to
+  // this value and no further. NULL = no cap (legacy reps-only freeze when paused).
+  if (!cols('user_exercise_settings').includes('pause_cap_kg'))
+    db.exec('ALTER TABLE user_exercise_settings ADD COLUMN pause_cap_kg REAL');
+  // Per-user ceiling for algorithm-driven set addition — the algorithm will not
+  // auto-add sets beyond this value; NULL falls back to 6 (legacy hard-cap).
+  if (!cols('user_exercise_settings').includes('optimal_sets'))
+    db.exec('ALTER TABLE user_exercise_settings ADD COLUMN optimal_sets INTEGER');
+
+  // ── Date-versioned set counts ─────────────────────────────────────────────────
+  // schedule.set_count is a single shared scalar per (plan, day, exercise), so
+  // any change to it — a manual +/- set or the algorithm appending a set when a
+  // reps-only exercise hits its ceiling — applied retroactively to every week,
+  // including already-completed sessions. set_counts records the count with a
+  // valid_from date (mirroring set_targets); the effective count for a session
+  // is the latest row valid as of that session's date. schedule.set_count is
+  // kept as a live mirror of the most recent value.
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS set_counts (
+      id          INTEGER PRIMARY KEY AUTOINCREMENT,
+      plan_id     INTEGER REFERENCES workout_plans(id) ON DELETE CASCADE,
+      day_of_week INTEGER NOT NULL,
+      exercise_id INTEGER NOT NULL REFERENCES exercises(id) ON DELETE CASCADE,
+      set_count   INTEGER NOT NULL,
+      valid_from  TEXT    NOT NULL
+    )
+  `);
+  // Backfill: every schedule row gets a baseline row dated far in the past, so
+  // existing and completed sessions resolve to exactly their current count.
+  // Idempotent — only inserts for schedule rows that have no set_counts row yet.
+  db.prepare(`
+    INSERT INTO set_counts (plan_id, day_of_week, exercise_id, set_count, valid_from)
+    SELECT s.plan_id, s.day_of_week, s.exercise_id, s.set_count, '1970-01-01'
+    FROM schedule s
+    WHERE NOT EXISTS (
+      SELECT 1 FROM set_counts sc
+      WHERE sc.plan_id IS s.plan_id AND sc.day_of_week = s.day_of_week
+        AND sc.exercise_id = s.exercise_id
+    )
+  `).run();
+
+  // Clear stale dates on currently-blank, never-finalized sessions. Earlier
+  // versions stamped session.date at slot-creation time (when the user merely
+  // navigated to the slot). The new rule is: blank sessions have NULL date and
+  // display as "today" until a real first log stamps a value. This is
+  // idempotent — re-runs only affect rows that are still in the blank state.
+  db.prepare(`
+    UPDATE sessions SET date = NULL
+    WHERE date IS NOT NULL
+      AND checked_in = 0
+      AND unlocked = 0
+      AND id NOT IN (
+        SELECT DISTINCT session_id FROM logged_sets
+        WHERE skipped = 1 OR reps_done IS NOT NULL
+      )
+  `).run();
+
+
+  // ── Default equipment (all enabled on first install) ─────────────────────────
+
+  if (db.prepare('SELECT COUNT(*) as n FROM user_equipment').get().n === 0) {
+    const ins = db.prepare('INSERT OR IGNORE INTO user_equipment (equipment) VALUES (?)');
+    db.transaction(() => {
+      for (const eq of ['barbell', 'dumbbell', 'cable', 'machine', 'bodyweight']) ins.run(eq);
+    })();
+  }
+
+  // ── Default-plan bootstrap (fresh DB with no plans) ───────────────────────────
+
+  if (db.prepare('SELECT COUNT(*) as n FROM workout_plans').get().n === 0) {
+    const { lastInsertRowid: planId } = db.prepare(
+      "INSERT INTO workout_plans (name, is_active, started_at) VALUES ('My Plan', 1, date('now'))"
+    ).run();
+    db.prepare('UPDATE schedule SET plan_id = ? WHERE plan_id IS NULL').run(planId);
+    const days = db.prepare('SELECT DISTINCT day_of_week FROM schedule WHERE plan_id = ?').all(planId);
+    const insDay = db.prepare('INSERT OR IGNORE INTO plan_days (plan_id, day_of_week) VALUES (?, ?)');
+    db.transaction(() => { for (const { day_of_week } of days) insDay.run(planId, day_of_week); })();
+  }
+}

@@ -1,0 +1,314 @@
+import { Router } from '../router.js';
+import db from '../db.js';
+import { selectProgressWeeks } from '../statsWeeks.js';
+import { saveFile } from '../storage.js';
+
+const router = Router();
+
+const WEEK_OF = `date(s.date, '-' || ((cast(strftime('%w', s.date) as integer) + 6) % 7) || ' days')`;
+const SCOPE   = `s.user_id = ? AND (? IS NULL OR s.plan_id = ?)`;
+const SCOPE2  = `s2.user_id = ? AND (? IS NULL OR s2.plan_id = ?)`;
+const DOW_NAME = `CASE s.session_dow WHEN 0 THEN 'Mon' WHEN 1 THEN 'Tue' WHEN 2 THEN 'Wed' WHEN 3 THEN 'Thu' WHEN 4 THEN 'Fri' WHEN 5 THEN 'Sat' ELSE 'Sun' END`;
+
+function sendCsv(res, filename, headers, rows) {
+  const esc = v => {
+    const s = String(v ?? '');
+    return /[,"\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+  };
+  const csv = [headers, ...rows].map(r => r.map(esc).join(',')).join('\r\n');
+  res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+  res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+  res.send(csv);
+}
+
+router.get('/', (req, res) => {
+  const uid    = req.user.id;
+  const planId = req.query.scope === 'active'
+    ? (db.prepare('SELECT id FROM workout_plans WHERE is_active = 1 AND user_id = ?').get(uid)?.id ?? null)
+    : null;
+  const P = [uid, planId, planId];
+
+  const ov = db.prepare(`
+    SELECT
+      COUNT(DISTINCT CASE WHEN ls.skipped = 0 AND ls.reps_done IS NOT NULL AND ls.weight_used IS NOT NULL THEN s.id END) AS total_workouts,
+      COALESCE(SUM(CASE WHEN ls.skipped = 0 AND ls.reps_done IS NOT NULL AND ls.weight_used IS NOT NULL
+        THEN ls.weight_used * ls.reps_done END), 0)                                                                       AS total_volume,
+      COUNT(CASE WHEN ls.skipped = 0 AND ls.reps_done IS NOT NULL AND ls.weight_used IS NOT NULL THEN 1 END)              AS sets_logged,
+      MIN(CASE WHEN ls.skipped = 0 AND ls.reps_done IS NOT NULL AND ls.weight_used IS NOT NULL THEN s.date END)           AS first_date,
+      MAX(CASE WHEN ls.skipped = 0 AND ls.reps_done IS NOT NULL AND ls.weight_used IS NOT NULL THEN s.date END)           AS last_date
+    FROM sessions s LEFT JOIN logged_sets ls ON ls.session_id = s.id
+    WHERE ${SCOPE}
+  `).get(...P);
+
+  let avg_per_week = 0;
+  if (ov.total_workouts > 0) {
+    // Divide by the number of distinct training weeks (Monday-anchored, same
+    // ${WEEK_OF} as the weekly chart), not the raw first→last day span. The
+    // span ends on the last workout rather than the end of its week, so a clean
+    // 4-per-week pattern measured that way reads ~4.2; counting whole training
+    // weeks gives the true 4.0.
+    const { week_count } = db.prepare(`
+      SELECT COUNT(DISTINCT ${WEEK_OF}) AS week_count
+      FROM sessions s JOIN logged_sets ls ON ls.session_id = s.id
+      WHERE ${SCOPE} AND ls.skipped = 0 AND ls.reps_done IS NOT NULL AND ls.weight_used IS NOT NULL
+    `).get(...P);
+    if (week_count > 0) avg_per_week = +(ov.total_workouts / week_count).toFixed(1);
+  }
+
+  const weekly_volume = db.prepare(`
+    SELECT ${WEEK_OF} AS week_start, SUM(ls.weight_used * ls.reps_done) AS volume
+    FROM sessions s JOIN logged_sets ls ON ls.session_id = s.id
+    WHERE ${SCOPE} AND ls.skipped = 0 AND ls.reps_done IS NOT NULL AND ls.weight_used IS NOT NULL
+    GROUP BY week_start ORDER BY week_start
+  `).all(...P);
+
+  const session_volume = db.prepare(`
+    SELECT s.date, SUM(ls.weight_used * ls.reps_done) AS volume
+    FROM sessions s JOIN logged_sets ls ON ls.session_id = s.id
+    WHERE ${SCOPE} AND ls.skipped = 0 AND ls.reps_done IS NOT NULL AND ls.weight_used IS NOT NULL
+    GROUP BY s.date ORDER BY s.date
+  `).all(...P);
+
+  const muscle_volume = db.prepare(`
+    SELECT e.muscle_group, SUM(ls.weight_used * ls.reps_done) AS volume
+    FROM logged_sets ls
+    JOIN sessions s  ON s.id  = ls.session_id
+    JOIN exercises e ON e.id  = ls.exercise_id
+    WHERE ${SCOPE} AND ls.skipped = 0 AND ls.reps_done IS NOT NULL AND ls.weight_used IS NOT NULL
+    GROUP BY e.muscle_group ORDER BY volume DESC
+  `).all(...P);
+
+  // Per-muscle-group volume progression: compare each group's total volume in
+  // the FIRST recorded week against the most recent COMPLETED week within the
+  // scoped period. Weeks are Monday-anchored (same ${WEEK_OF} as the weekly
+  // chart) so a structured plan that repeats the same exercises each week gives
+  // a clean like-for-like comparison. A fully-elapsed week always counts; the
+  // current calendar week counts once it's fully trained (see selectProgressWeeks).
+  const weekRows = db.prepare(`
+    SELECT e.muscle_group, ${WEEK_OF} AS week_start, SUM(ls.weight_used * ls.reps_done) AS volume
+    FROM logged_sets ls
+    JOIN sessions s  ON s.id  = ls.session_id
+    JOIN exercises e ON e.id  = ls.exercise_id
+    WHERE ${SCOPE} AND ls.skipped = 0 AND ls.reps_done IS NOT NULL AND ls.weight_used IS NOT NULL
+    GROUP BY e.muscle_group, week_start
+  `).all(...P);
+
+  const { cur } = db.prepare(
+    `SELECT date('now', '-' || ((cast(strftime('%w','now') as integer) + 6) % 7) || ' days') AS cur`
+  ).get();
+
+  // Session counts per week (scoped) — `done` = checked_in sessions. Lets a
+  // current calendar week that's already fully trained count as completed.
+  const sessByWeek = new Map(
+    db.prepare(`
+      SELECT ${WEEK_OF} AS week_start,
+             COUNT(*) AS total,
+             SUM(CASE WHEN s.checked_in = 1 THEN 1 ELSE 0 END) AS done
+      FROM sessions s
+      WHERE ${SCOPE} AND s.date IS NOT NULL
+      GROUP BY week_start
+    `).all(...P).map(r => [r.week_start, r])
+  );
+
+  const weeks = [...new Set(weekRows.map(r => r.week_start))].sort();   // ascending
+  const { firstWeek, lastWeek } = selectProgressWeeks(weeks, cur, sessByWeek);
+
+  let muscle_progress = [];
+  if (firstWeek && lastWeek) {
+    const at  = (mg, wk) => weekRows.find(r => r.muscle_group === mg && r.week_start === wk)?.volume ?? null;
+    const mgs = [...new Set(weekRows.map(r => r.muscle_group))];
+    muscle_progress = mgs.map(muscle_group => {
+      const first_vol = at(muscle_group, firstWeek);
+      const last_vol  = at(muscle_group, lastWeek);
+      const trend = first_vol && last_vol && first_vol > 0
+        ? Math.round((last_vol - first_vol) / first_vol * 100) : null;
+      return { muscle_group, first_week: firstWeek, last_week: lastWeek, first_vol, last_vol, trend };
+    }).sort((a, b) => (b.last_vol ?? 0) - (a.last_vol ?? 0));
+  }
+
+  // Weighted exercises — best is the heaviest weight ever logged. Bodyweight
+  // exercises are excluded here: their logged "weight" is just the user's
+  // bodyweight, which would always rank them at the top. They get a separate
+  // list below, ranked by reps (the real record for a bodyweight movement).
+  // The WHERE clause keeps only rows at the exercise's heaviest weight; when
+  // that weight was hit at several rep counts, MAX(reps_done) reports the best
+  // one (and, being the sole min/max aggregate, pulls the other bare columns
+  // from that same row) — otherwise GROUP BY would collapse to an arbitrary set.
+  const personal_bests = db.prepare(`
+    SELECT e.id AS exercise_id, e.name, e.muscle_group,
+           ls.weight_used AS max_weight, MAX(ls.reps_done) AS reps_done
+    FROM logged_sets ls
+    JOIN sessions s  ON s.id  = ls.session_id
+    JOIN exercises e ON e.id  = ls.exercise_id
+    WHERE ${SCOPE} AND ls.skipped = 0 AND ls.weight_used IS NOT NULL AND ls.reps_done IS NOT NULL
+      AND e.equipment != 'bodyweight'
+      AND ls.weight_used = (
+        SELECT MAX(ls2.weight_used)
+        FROM logged_sets ls2 JOIN sessions s2 ON s2.id = ls2.session_id
+        WHERE ls2.exercise_id = ls.exercise_id AND ${SCOPE2}
+          AND ls2.skipped = 0 AND ls2.weight_used IS NOT NULL
+      )
+    GROUP BY ls.exercise_id
+    ORDER BY max_weight DESC
+    LIMIT 20
+  `).all(...P, ...P);
+
+  const bodyweight_bests = db.prepare(`
+    SELECT e.id AS exercise_id, e.name, e.muscle_group,
+           ls.reps_done AS max_reps
+    FROM logged_sets ls
+    JOIN sessions s  ON s.id  = ls.session_id
+    JOIN exercises e ON e.id  = ls.exercise_id
+    WHERE ${SCOPE} AND ls.skipped = 0 AND ls.reps_done IS NOT NULL
+      AND e.equipment = 'bodyweight'
+      AND ls.reps_done = (
+        SELECT MAX(ls2.reps_done)
+        FROM logged_sets ls2 JOIN sessions s2 ON s2.id = ls2.session_id
+        WHERE ls2.exercise_id = ls.exercise_id AND ${SCOPE2}
+          AND ls2.skipped = 0 AND ls2.reps_done IS NOT NULL
+      )
+    GROUP BY ls.exercise_id
+    ORDER BY max_reps DESC
+    LIMIT 20
+  `).all(...P, ...P);
+
+  const top_exercises = db.prepare(`
+    SELECT e.id AS exercise_id, e.name, e.muscle_group,
+           COUNT(DISTINCT s.id) AS session_count, COUNT(ls.id) AS set_count
+    FROM logged_sets ls
+    JOIN sessions s  ON s.id  = ls.session_id
+    JOIN exercises e ON e.id  = ls.exercise_id
+    WHERE ${SCOPE} AND ls.skipped = 0 AND ls.reps_done IS NOT NULL AND ls.weight_used IS NOT NULL
+    GROUP BY ls.exercise_id
+    ORDER BY session_count DESC
+    LIMIT 10
+  `).all(...P);
+
+  res.json({ overview: { ...ov, avg_per_week }, weekly_volume, session_volume, muscle_volume, muscle_progress, personal_bests, bodyweight_bests, top_exercises });
+});
+
+router.get('/export', (req, res) => {
+  const uid    = req.user.id;
+  const type   = req.query.type ?? 'exercise_history';
+  const planId = req.query.scope === 'active'
+    ? (db.prepare('SELECT id FROM workout_plans WHERE is_active = 1 AND user_id = ?').get(uid)?.id ?? null)
+    : null;
+  const P    = [uid, planId, planId];
+  const slug = planId ? '-this-plan' : '';
+
+  // exercise_history: one row per exercise per session — date, key stats per lift
+  if (type === 'exercise_history') {
+    const rows = db.prepare(`
+      SELECT s.date, COALESCE(wp.name,'') AS plan_name,
+             e.name AS exercise, e.muscle_group,
+             COUNT(CASE WHEN ls.skipped=0 AND ls.reps_done IS NOT NULL THEN 1 END) AS sets_done,
+             MAX(CASE WHEN ls.skipped=0 AND ls.weight_used IS NOT NULL THEN ls.weight_used END) AS max_weight_kg,
+             ROUND(COALESCE(SUM(CASE WHEN ls.skipped=0 AND ls.reps_done IS NOT NULL AND ls.weight_used IS NOT NULL
+               THEN ls.weight_used * ls.reps_done END), 0)) AS volume_kg_reps
+      FROM logged_sets ls
+      JOIN sessions s  ON s.id  = ls.session_id
+      JOIN exercises e ON e.id  = ls.exercise_id
+      LEFT JOIN workout_plans wp ON wp.id = s.plan_id
+      WHERE ${SCOPE} AND s.date IS NOT NULL
+      GROUP BY s.id, e.id
+      HAVING sets_done > 0
+      ORDER BY s.date, e.muscle_group, e.name
+    `).all(...P);
+    return sendCsv(res, `exercise-history${slug}.csv`,
+      ['date','plan','exercise','muscle_group','sets_done','max_weight_kg','volume_kg_reps'],
+      rows.map(r => [r.date, r.plan_name, r.exercise, r.muscle_group,
+                     r.sets_done, r.max_weight_kg ?? '', r.volume_kg_reps]));
+  }
+
+  // sessions: one row per workout — total volume and sets
+  if (type === 'sessions') {
+    const rows = db.prepare(`
+      SELECT s.date, COALESCE(wp.name,'') AS plan_name, s.week_num, ${DOW_NAME} AS day,
+             ROUND(COALESCE(SUM(CASE WHEN ls.skipped=0 AND ls.reps_done IS NOT NULL AND ls.weight_used IS NOT NULL
+               THEN ls.weight_used * ls.reps_done END), 0)) AS volume_kg_reps,
+             COUNT(CASE WHEN ls.skipped=0 AND ls.reps_done IS NOT NULL THEN 1 END) AS sets_logged,
+             COUNT(DISTINCT CASE WHEN ls.skipped=0 AND ls.reps_done IS NOT NULL THEN ls.exercise_id END) AS exercises
+      FROM sessions s
+      LEFT JOIN logged_sets ls ON ls.session_id = s.id
+      LEFT JOIN workout_plans wp ON wp.id = s.plan_id
+      WHERE ${SCOPE} AND s.date IS NOT NULL
+      GROUP BY s.id
+      HAVING sets_logged > 0
+      ORDER BY s.date
+    `).all(...P);
+    return sendCsv(res, `sessions${slug}.csv`,
+      ['date','plan','week','day','exercises','sets_logged','volume_kg_reps'],
+      rows.map(r => [r.date, r.plan_name, r.week_num, r.day,
+                     r.exercises, r.sets_logged, r.volume_kg_reps]));
+  }
+
+  // personal_bests: highest weight ever logged per exercise
+  if (type === 'personal_bests') {
+    const rows = db.prepare(`
+      SELECT e.name AS exercise, e.muscle_group,
+             ls.weight_used AS max_weight_kg, MAX(ls.reps_done) AS reps, s.date
+      FROM logged_sets ls
+      JOIN sessions s  ON s.id  = ls.session_id
+      JOIN exercises e ON e.id  = ls.exercise_id
+      WHERE ${SCOPE} AND ls.skipped=0 AND ls.weight_used IS NOT NULL AND ls.reps_done IS NOT NULL
+        AND ls.weight_used = (
+          SELECT MAX(ls2.weight_used) FROM logged_sets ls2
+          JOIN sessions s2 ON s2.id = ls2.session_id
+          WHERE ls2.exercise_id = ls.exercise_id AND ${SCOPE2}
+            AND ls2.skipped=0 AND ls2.weight_used IS NOT NULL
+        )
+      GROUP BY ls.exercise_id
+      ORDER BY ls.weight_used DESC
+    `).all(...P, ...P);
+    return sendCsv(res, `personal-bests${slug}.csv`,
+      ['exercise','muscle_group','max_weight_kg','reps','date'],
+      rows.map(r => [r.exercise, r.muscle_group, r.max_weight_kg, r.reps, r.date]));
+  }
+
+  // weekly_volume: total volume per calendar week
+  if (type === 'weekly_volume') {
+    const rows = db.prepare(`
+      SELECT ${WEEK_OF} AS week_start,
+             ROUND(SUM(ls.weight_used * ls.reps_done)) AS volume_kg_reps,
+             COUNT(DISTINCT s.id) AS sessions,
+             COUNT(ls.id) AS sets_logged
+      FROM sessions s JOIN logged_sets ls ON ls.session_id = s.id
+      WHERE ${SCOPE} AND ls.skipped=0 AND ls.reps_done IS NOT NULL AND ls.weight_used IS NOT NULL
+      GROUP BY week_start ORDER BY week_start
+    `).all(...P);
+    return sendCsv(res, `weekly-volume${slug}.csv`,
+      ['week_start','sessions','sets_logged','volume_kg_reps'],
+      rows.map(r => [r.week_start, r.sessions, r.sets_logged, r.volume_kg_reps]));
+  }
+
+  res.status(400).json({ error: 'Unknown export type' });
+});
+
+router.post('/reset', async (req, res) => {
+  const uid  = req.user.id;
+  const ts   = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+  const file = `fitness-backup-${ts}.db`;
+  try {
+    // Keep the pre-reset database on the device; Setup offers it for restore.
+    await saveFile('pre-reset-backup', { name: file, bytes: db.export() });
+    db.transaction(() => {
+      for (const { id } of db.prepare('SELECT id FROM workout_plans WHERE user_id = ?').all(uid))
+        db.prepare('DELETE FROM set_targets WHERE plan_id = ?').run(id);
+      // Also wipe targets for legacy plans (user_id IS NULL, created before
+      // multi-user support) and fully orphaned targets (plan row deleted).
+      // Both are invisible to the per-plan loop above but can ghost into future
+      // plan queries if left behind.
+      db.prepare(
+        `DELETE FROM set_targets WHERE plan_id IS NULL
+           OR plan_id IN (SELECT id FROM workout_plans WHERE user_id IS NULL)
+           OR plan_id NOT IN (SELECT id FROM workout_plans)`
+      ).run();
+      db.prepare('DELETE FROM sessions WHERE user_id = ?').run(uid);
+    })();
+    res.json({ ok: true, backup: file });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+export default router;

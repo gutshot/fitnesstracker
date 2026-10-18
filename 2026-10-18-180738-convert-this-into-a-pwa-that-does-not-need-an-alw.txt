@@ -1,0 +1,2630 @@
+ ▐▛███▛█   Claude Code v2.1.302
+▝▜██████▀  Opus 5.5 · API Usage Billing
+ ▝▝   ▝▝   ~/localhost/fitnesstrack
+
+▎ Debug mode enabled · logging to /Users/philb/cli-trace-extractor/claude_config/active_8080/debug/5a9c8f5d-7fc8-4b68-ac81-c7738c63f4bc.txt
+
+⏺ Auto mode lets Claude handle permission prompts automatically — Claude
+  checks each tool call for risky actions and prompt injection before 
+  executing. Actions Claude identifies as safe are executed, while 
+  actions Claude identifies as risky are blocked and Claude may try a 
+  different approach. Ideal for long-running tasks. Sessions are 
+  slightly more expensive. Claude can make mistakes that allow harmful 
+  commands to run, it's recommended to only use in isolated 
+  environments. Shift+Tab to change mode.
+
+❯ Convert this into a PWA that does not need an always-on Docker container. Use 
+  your best judgement on how to accomplish this, don't ask questions. Once      
+  done, I should be able to install it on my phone and track my workouts        
+  offline.                                                                      
+
+⏺ Bash(git ls-files | grep -v '^client/public/' | head -100 && cat package.json
+      client/package.json && ls && wc -l server/*.js server/routes/*.js
+      server/middleware/*.j…)
+  ⎿  .dockerignore
+     .env.example
+     .gitattributes
+     … +138 lines (ctrl+o to expand)
+
+  Read 5 files, listed 1 directory (ctrl+o to expand)
+
+⏺ Bash(grep -rn "fetch(\|/api\|window.location\|resetStats\|csv\|export"
+      client/src --include='*.jsx' | grep -v "^client/src/api" | grep -v "export
+      default\|export fun…)
+  ⎿  client/src/App.jsx:12:import { api } from './api/index.js';
+     client/src/auth.jsx:2:import { api } from './api/index.js';
+     client/src/components/ExerciseEditModal.jsx:2:import { api } from '../
+     … +32 lines (ctrl+o to expand)
+
+⏺ I've reviewed the server routes, DB layer, and client API, and I'm planning to
+  port the SQLite logic to run in-browser via WASM with IndexedDB storage,
+  making the app a fully offline static PWA. Next I'll check the local Node
+  toolchain.
+
+⏺ Bash(ls ~/.nvm/versions/node 2>/dev/null; which -a node; ls
+      /opt/homebrew/bin/node* /usr/local/bin/node* 2>/dev/null; ls ~/.volta
+      ~/.fnm 2>/dev/null | head; cd /User…)
+  ⎿  v10.0.0
+     v10.1.0
+     v10.24.1
+     … +77 lines (ctrl+o to expand)
+
+⏺ Bash(grep -rn "shared/\|window\.location\|href=\|navigate(\|api\.\(login\|logo
+      ut\|register\|triggerUpdate\|getUpdateStatus\|getMe\|resetStats\|getToday\
+      |getSessionFo…)
+  ⎿  client/src/App.jsx:55:    await api.logout();
+     client/src/auth.jsx:10:    api.getMe().then(setUser).catch(() => setUs
+     er(null));
+     … +89 lines (ctrl+o to expand)
+
+⏺ Now setting up the toolchain (Node 22 from nvm) and adding sql.js.
+
+⏺ Bash(cd /Users/philb/localhost/fitnesstrack/client && export
+      PATH=~/.nvm/versions/node/v22.12.0/bin:$PATH && npm install 2>&1 | tail -3
+      && npm view sql.js versions -…)
+  ⎿    npm audit fix
+
+     Run `npm audit` for details.
+     … +11 lines (ctrl+o to expand)
+  ⎿  Updated client/package-lock.json (+0 -30)
+      219          "arm64"
+      220        ],
+      221        "dev": true,
+      222 -      "libc": [                                               
+      223 -        "glibc"                                               
+      224 -      ],                                                      
+      222        "license": "MIT",
+      223        "optional": true,
+      224        "os": [
+     ...
+      236          "arm64"
+      237        ],
+      238        "dev": true,
+      242 -      "libc": [                                               
+      243 -        "musl"                                                
+      244 -      ],                                                      
+      239        "license": "MIT",
+      240        "optional": true,
+      241        "os": [
+     ...
+      253          "ppc64"
+      254        ],
+      255        "dev": true,
+      262 -      "libc": [                                               
+      263 -        "glibc"                                               
+      264 -      ],                                                      
+      256        "license": "MIT",
+      257        "optional": true,
+      258        "os": [
+     ...
+      270          "s390x"
+      271        ],
+      272        "dev": true,
+      282 -      "libc": [                                               
+      283 -        "glibc"                                               
+      284 -      ],                                                      
+      273        "license": "MIT",
+      274        "optional": true,
+      275        "os": [
+     ...
+      287          "x64"
+      288        ],
+      289        "dev": true,
+      302 -      "libc": [                                               
+     … 50 more lines (ctrl+o to expand)
+
+⏺ Bash(export PATH=~/.nvm/versions/node/v22.12.0/bin:$PATH && npm install
+      sql.js@1.14.2 --save-exact 2>&1 | tail -2 && ls node_modules/sql.js/dist/
+      && grep -n '"main"\…)
+  ⎿  Run `npm audit` for details.
+     sql-asm-debug.js
+     sql-asm-memory-growth.js
+     … +23 lines (ctrl+o to expand)
+  ⎿  Updated client/package-lock.json (+8 -1)
+      11          "react": "^18.3.0",
+      12          "react-dom": "^18.3.0",
+      13          "react-router-dom": "^6.26.0",
+      14 -        "recharts": "^3.8.1"                                   
+      14 +        "recharts": "^3.8.1",                                  
+      15 +        "sql.js": "1.14.2"                                     
+      16        },
+      17        "devDependencies": {
+      18          "@vitejs/plugin-react": "^6.0.2",
+     ...
+      1261          "node": ">=0.10.0"
+      1262        }
+      1263      },
+      1264 +    "node_modules/sql.js": {                                 
+      1265 +      "version": "1.14.2",                                   
+      1266 +      "resolved": "https://registry.npmjs.org/sql.js/-/sql.js
+           +-1.14.2.tgz",                                                
+      1267 +      "integrity": "sha512-3ZGPovObMFrdw79zrUHbfdE/DLIsy8jdNd
+           +ssmMSQuRAymedU6q84asPt0kgiqrdMYlPegDItiIMfmIXzZnYFcw==",     
+      1268 +      "license": "MIT"                                       
+      1269 +    },                                                       
+      1270      "node_modules/tiny-invariant": {
+      1271        "version": "1.3.3",
+      1272        "resolved": "https://registry.npmjs.org/tiny-invariant/
+            -/tiny-invariant-1.3.3.tgz",
+  ⎿  Updated client/package.json (+2 -1)
+      11      "react": "^18.3.0",
+      12      "react-dom": "^18.3.0",
+      13      "react-router-dom": "^6.26.0",
+      14 -    "recharts": "^3.8.1"                                       
+      14 +    "recharts": "^3.8.1",                                      
+      15 +    "sql.js": "1.14.2"                                         
+      16    },
+      17    "devDependencies": {
+      18      "@vitejs/plugin-react": "^6.0.2",
+
+⏺ Moving the server logic into the client as an in-browser backend (git mv keeps
+  history).
+
+⏺ Bash(cd /Users/philb/localhost/fitnesstrack && mkdir -p
+      client/src/backend/routes && git mv server/db.js server/seed.js
+      server/setCounts.js server/statsWeeks.js serv…)
+  ⎿  ls: scripts: No such file or directory
+     ls: server: No such file or directory
+     D  .dockerignore
+     … +26 lines (ctrl+o to expand)
+  ⎿  Deleted .dockerignore (+0 -6)
+      1 -node_modules/                                                   
+      2 -client/node_modules/                                            
+      3 -client/dist/                                                    
+      4 -*.db                                                            
+      5 -.env                                                            
+      6 -.git/                                                           
+  ⎿  Deleted .env.example (+0 -2)
+      1 -PORT=3001                                                       
+      2 -DATABASE_PATH=./fitness.db                                      
+  ⎿  Deleted Dockerfile (+0 -27)
+       1 -# Stage 1: build the React client and compile native addons    
+       2 -FROM node:20-alpine AS builder                                 
+       3 -RUN apk add --no-cache python3 make g++                        
+       4 -WORKDIR /app                                                   
+       5 -COPY package*.json ./                                          
+       6 -RUN npm ci                                                     
+       7 -COPY client/package*.json ./client/                            
+       8 -RUN cd client && npm ci                                        
+       9 -COPY . .                                                       
+      10 -RUN cd client && npm run build                                 
+      11 -                                                               
+      12 -# Stage 2: lean production image                               
+      13 -FROM node:20-alpine                                            
+      14 -WORKDIR /app                                                   
+      15 -# Copy compiled node_modules (better-sqlite3 native addon built
+         - for this arch)                                                
+      16 -COPY --from=builder /app/node_modules ./node_modules           
+      17 -COPY --from=builder /app/client/dist ./client/dist             
+      18 -COPY server/ ./server/                                         
+      19 -COPY shared/ ./shared/                                         
+      20 -COPY package.json ./                                           
+      21 -COPY docker-entrypoint.sh ./                                   
+      22 -RUN chmod +x docker-entrypoint.sh                              
+      23 -EXPOSE 3001                                                    
+      24 -ENV PORT=3001                                                  
+      25 -ENV DATABASE_PATH=/data/fitness.db                             
+      26 -VOLUME /data                                                   
+      27 -ENTRYPOINT ["./docker-entrypoint.sh"]                          
+  ⎿  Created client/src/backend/db.js (+379 -0)
+        1 +import Database from 'better-sqlite3';                        
+        2 +import { fileURLToPath } from 'url';                          
+        3 +import { dirname, join } from 'path';                         
+        4 +import { randomBytes } from 'crypto';                         
+        5 +                                                              
+        6 +const __dirname = dirname(fileURLToPath(import.meta.url));    
+        7 +export const dbPath = process.env.DATABASE_PATH ?? join(__dirn
+          +ame, '..', 'fitness.db');                                     
+        8 +const db = new Database(dbPath);                              
+        9 +                                                              
+       10 +db.pragma('journal_mode = WAL');                              
+       11 +db.pragma('foreign_keys = ON');                               
+       12 +                                                              
+       13 +db.exec(`                                                     
+       14 +  CREATE TABLE IF NOT EXISTS users (                          
+       15 +    id            INTEGER PRIMARY KEY AUTOINCREMENT,          
+       16 +    username      TEXT    NOT NULL UNIQUE,                    
+       17 +    name          TEXT    NOT NULL,                           
+       18 +    glyph         TEXT    NOT NULL DEFAULT '🏋️',              
+       19 +    password_hash TEXT    NOT NULL,                           
+       20 +    created_at    TEXT    NOT NULL DEFAULT (datetime('now'))  
+       21 +  );                                                          
+       22 +                                                              
+       23 +  CREATE TABLE IF NOT EXISTS config (                         
+       24 +    key   TEXT PRIMARY KEY,                                   
+       25 +    value TEXT NOT NULL                                       
+       26 +  );                                                          
+       27 +                                                              
+       28 +  CREATE TABLE IF NOT EXISTS exercises (                      
+       29 +    id               INTEGER PRIMARY KEY AUTOINCREMENT,       
+       30 +    name             TEXT    NOT NULL UNIQUE,                 
+       31 +    muscle_group     TEXT    NOT NULL,                        
+       32 +    equipment        TEXT    NOT NULL,                        
+       33 +    default_increment REAL   NOT NULL DEFAULT 2.5             
+       34 +  );                                                          
+       35 +                                                              
+       36 +  CREATE TABLE IF NOT EXISTS user_equipment (                 
+       37 +    equipment TEXT PRIMARY KEY                                
+       38 +  );                                                          
+       39 +                                                              
+       40 +  CREATE TABLE IF NOT EXISTS schedule (                       
+     … 339 more lines (ctrl+o to expand)
+  ⎿  Created client/src/backend/routes/auth.js (+112 -0)
+        1 +import { Router } from 'express';                             
+        2 +import bcrypt from 'bcryptjs';                                
+        3 +import jwt from 'jsonwebtoken';                               
+        4 +import rateLimit from 'express-rate-limit';                   
+        5 +import db, { jwtSecret } from '../db.js';                     
+        6 +import { requireAuth } from '../middleware/auth.js';          
+        7 +                                                              
+        8 +const router = Router();                                      
+        9 +                                                              
+       10 +const loginLimiter = rateLimit({                              
+       11 +  windowMs: 15 * 60 * 1000,                                   
+       12 +  max: 10,                                                    
+       13 +  standardHeaders: true,                                      
+       14 +  legacyHeaders: false,                                       
+       15 +  message: { error: 'Too many login attempts, please try again
+          + later' },                                                    
+       16 +});                                                           
+       17 +                                                              
+       18 +function cookieOpts(req) {                                    
+       19 +  return { httpOnly: true, sameSite: 'lax', secure: req.secure
+          +, maxAge: 7 * 24 * 60 * 60 * 1000 };                          
+       20 +}                                                             
+       21 +                                                              
+       22 +function setToken(res, req, userId) {                         
+       23 +  const token = jwt.sign({ id: userId }, jwtSecret, { expiresI
+          +n: '7d' });                                                   
+       24 +  res.cookie('token', token, cookieOpts(req));                
+       25 +}                                                             
+       26 +                                                              
+       27 +function publicUser(u) {                                      
+       28 +  return { id: u.id, username: u.username, name: u.name, glyph
+          +: u.glyph };                                                  
+       29 +}                                                             
+       30 +                                                              
+       31 +// Returns current user from cookie, or null                  
+       32 +router.get('/me', (req, res) => {                             
+       33 +  const token = req.cookies?.token;                           
+       34 +  if (!token) return res.json(null);                          
+       35 +  try {                                                       
+       36 +    const { id } = jwt.verify(token, jwtSecret);              
+       37 +    const user = db.prepare('SELECT id, username, name, glyph 
+          +FROM users WHERE id = ?').get(id);                            
+       38 +    res.json(user ?? null);                                   
+       39 +  } catch {                                                   
+       40 +    res.clearCookie('token');                                 
+     … 72 more lines (ctrl+o to expand)
+  ⎿  … 31 more files changed
+
+⏺ Now the core shim: a better-sqlite3-compatible wrapper over sql.js, so the
+  moved route code runs nearly unchanged.
+
+⏺ Write(client/src/backend/sqlite.js)
+  ⎿  Wrote 166 lines to client/src/backend/sqlite.js
+      1 // better-sqlite3-compatible facade over sql.js (SQLite compiled 
+      2 //
+      3 // The backend modules were written against better-sqlite3's sync
+      4 // (prepare().get/all/run, transaction(), pragma()). This facade 
+      5 // same surface on top of an in-memory sql.js Database so they ru
+        n in the
+        untime
+      7 // (attach) — e.g. when the user imports a backup — so prepared s
+      8 // resolved lazily per call from a cache keyed by SQL text and ke
+      9 // currently attached database.
+     … +185 lines (ctrl+o to expand)
+
+⏺ Write(client/src/backend/router.js)
+  ⎿  Wrote 71 lines to client/src/backend/router.js
+       1 // Minimal Express-style router so the backend route modules kee
+         p their shape
+         owser. Requests
+       3 // are dispatched in-process — there is no network hop.
+       4 
+       6   const keys = [];
+       7   const src = pattern
+       8     .split('/')
+      10       if (seg.startsWith(':')) { keys.push(seg.slice(1)); return
+          '([^/]+)'; }
+     … +73 lines (ctrl+o to expand)
+
+⏺ Update(client/src/backend/router.js)
+  ⎿  Added 1 line, removed 1 line
+      11        return seg.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      12      })
+      13      .join('/');
+      14 -  return { re: new RegExp(`^${src === '' ? '/?' : src}/?$`), ke
+         -ys };                                                          
+      14 +  return { re: new RegExp(`^${src}/?$`), keys };               
+      15  }
+      16  
+      17  export function Router() {
+
+⏺ Now converting db.js from run-on-import into a migrate() function over the
+  shim.
+
+⏺ Bash(cd /Users/philb/localhost/fitnesstrack/client/src/backend && python3 -
+      <<'EOF'
+      import re…)
+  ⎿  `).run();
+     … +42 lines (ctrl+o to expand)
+  ⎿  Updated client/src/backend/db.js (+9 -22)
+       1 -import Database from 'better-sqlite3';                         
+       2 -import { fileURLToPath } from 'url';                           
+       3 -import { dirname, join } from 'path';                          
+       4 -import { randomBytes } from 'crypto';                          
+       1 +import { Database } from './sqlite.js';                        
+       2  
+       6 -const __dirname = dirname(fileURLToPath(import.meta.url));     
+       7 -export const dbPath = process.env.DATABASE_PATH ?? join(__dirna
+         -me, '..', 'fitness.db');                                       
+       8 -const db = new Database(dbPath);                               
+       9 -                                                               
+      10 -db.pragma('journal_mode = WAL');                               
+      11 -db.pragma('foreign_keys = ON');                                
+       3 +// Single shared handle. The backend modules import this and ca
+         +ll it exactly                                                  
+       4 +// like better-sqlite3; index.js attaches the real sql.js datab
+         +ase at startup                                                 
+       5 +// (and re-attaches on backup import), then runs migrate().    
+       6 +const db = new Database();                                     
+       7 +export default db;                                             
+       8  
+       9 +// Schema + column migrations. Idempotent — safe to run on ever
+         +y open, and on an                                              
+      10 +// imported database file from any earlier (server-era) version
+         +.                                                              
+      11 +export function migrate() {                                    
+      12  db.exec(`
+      13    CREATE TABLE IF NOT EXISTS users (
+      14      id            INTEGER PRIMARY KEY AUTOINCREMENT,
+     ...
+      351    })();
+      352  }
+      353  
+      355 -// ── JWT secret (generated once, stored in DB) ──────────────
+          -───────────────────                                           
+      356 -                                                              
+      357 -if (!db.prepare("SELECT 1 FROM config WHERE key = 'jwt_secret'
+          -").get())                                                     
+      358 -  db.prepare("INSERT INTO config (key, value) VALUES ('jwt_sec
+          -ret', ?)").run(randomBytes(32).toString('hex'));              
+      359 -                                                              
+      360 -export const jwtSecret = db.prepare("SELECT value FROM config 
+          -WHERE key = 'jwt_secret'").get().value;                       
+      361 -                                                              
+      354  // ── Default-plan bootstrap (fresh DB with no plans) ────────
+           ───────────────────
+      355  
+      356  if (db.prepare('SELECT COUNT(*) as n FROM workout_plans').get(
+           ).n === 0) {
+     ...
+      363    db.transaction(() => { for (const { day_of_week } of days) i
+           nsDay.run(planId, day_of_week); })();
+      364  }
+      365  
+     … 6 more lines (ctrl+o to expand)
+
+⏺ Bash(python3 - <<'EOF'
+      p='db.js'…)
+  ⎿      const days = db.prepare('SELECT DISTINCT day_of_week FROM schedule
+      WHERE plan_id = ?').all(planId);
+         const insDay = db.prepare('INSERT OR IGNORE INTO plan_days (plan_i
+     … +16 lines (ctrl+o to expand)
+  ⎿  1 file changed (binary, mode only or too large to show)
+
+⏺ Bash(python3 - <<'EOF'
+      import re,glob…)
+  ⎿  routes/exercises.js:1:import { Router } from '../router.js';
+     routes/exercises.js:2:import db from '../db.js';
+     routes/auth.js:1:import { Router } from '../router.js';
+     … +30 lines (ctrl+o to expand)
+  ⎿  Updated client/src/backend/routes/auth.js (+1 -1)
+      1 -import { Router } from 'express';                               
+      1 +import { Router } from '../router.js';                          
+      2  import bcrypt from 'bcryptjs';
+      3  import jwt from 'jsonwebtoken';
+      4  import rateLimit from 'express-rate-limit';
+  ⎿  Updated client/src/backend/routes/exercises.js (+1 -1)
+      1 -import { Router } from 'express';                               
+      1 +import { Router } from '../router.js';                          
+      2  import db from '../db.js';
+      3  
+      4  const router = Router();
+  ⎿  Updated client/src/backend/routes/plans.js (+2 -2)
+      1 -import { Router } from 'express';                               
+      1 +import { Router } from '../router.js';                          
+      2  import db from '../db.js';
+      3 -import { slotDone } from '../../shared/slotDone.js';            
+      3 +import { slotDone } from '../../../../shared/slotDone.js';      
+      4  import { recordSetCount } from '../setCounts.js';
+      5  
+      6  const router = Router();
+  ⎿  Updated client/src/backend/routes/schedule.js (+1 -1)
+      1 -import { Router } from 'express';                               
+      1 +import { Router } from '../router.js';                          
+      2  import db from '../db.js';
+      3  import { effectiveSetCount, recordSetCount } from '../setCounts.
+         js';
+      4  
+  ⎿  Updated client/src/backend/routes/sessions.js (+4 -4)
+      1 -import { Router } from 'express';                               
+      1 +import { Router } from '../router.js';                          
+      2  import db from '../db.js';
+      3 -import { nextExerciseTargets, weightAdjustedTarget, setPerforman
+        -ce } from '../../shared/algorithm.js';                          
+      4 -import { liftVerdict, summarizeVerdicts, capVerdictToTargets, fl
+        -oorVerdictToTargets } from '../../shared/recap.js';             
+      5 -import { slotDone } from '../../shared/slotDone.js';            
+      3 +import { nextExerciseTargets, weightAdjustedTarget, setPerforman
+        +ce } from '../../../../shared/algorithm.js';                    
+      4 +import { liftVerdict, summarizeVerdicts, capVerdictToTargets, fl
+        +oorVerdictToTargets } from '../../../../shared/recap.js';       
+      5 +import { slotDone } from '../../../../shared/slotDone.js';      
+      6  import { effectiveSetCount, recordSetCount, clearSetCountAt } fr
+         om '../setCounts.js';
+      7  
+      8  const router = Router();
+  ⎿  … 2 more files changed
+
+⏺ Now rewriting the auth route as a local profile (no passwords — the data lives
+  on the device).
+
+⏺ Write(client/src/backend/routes/auth.js)
+  ⎿  Added 54 lines, removed 85 lines
+        1  import { Router } from '../router.js';
+        2 -import bcrypt from 'bcryptjs';                                
+        3 -import jwt from 'jsonwebtoken';                               
+        4 -import rateLimit from 'express-rate-limit';                   
+        5 -import db, { jwtSecret } from '../db.js';                     
+        6 -import { requireAuth } from '../middleware/auth.js';          
+        2 +import db from '../db.js';                                    
+        3  
+        4 +// Local profiles. The database lives on the device, so there 
+          +are no passwords                                              
+        5 +// or sessions — the active profile is simply recorded in `con
+          +fig`. A database                                              
+        6 +// imported from the old multi-user server may hold several us
+          +ers; the                                                      
+        7 +// /users + /select pair lets the device owner pick which one 
+          +is theirs.                                                    
+        8 +                                                              
+        9  const router = Router();
+       10  
+       10 -const loginLimiter = rateLimit({                              
+       11 -  windowMs: 15 * 60 * 1000,                                   
+       12 -  max: 10,                                                    
+       13 -  standardHeaders: true,                                      
+       14 -  legacyHeaders: false,                                       
+       15 -  message: { error: 'Too many login attempts, please try again
+          - later' },                                                    
+       16 -});                                                           
+       17 -                                                              
+       18 -function cookieOpts(req) {                                    
+       19 -  return { httpOnly: true, sameSite: 'lax', secure: req.secure
+          -, maxAge: 7 * 24 * 60 * 60 * 1000 };                          
+       11 +function publicUser(u) {                                      
+       12 +  return { id: u.id, username: u.username, name: u.name, glyph
+          +: u.glyph };                                                  
+       13  }
+       14  
+       22 -function setToken(res, req, userId) {                         
+       23 -  const token = jwt.sign({ id: userId }, jwtSecret, { expiresI
+          -n: '7d' });                                                   
+       24 -  res.cookie('token', token, cookieOpts(req));                
+       15 +export function currentUserId() {                             
+       16 +  const row = db.prepare("SELECT value FROM config WHERE key =
+          + 'local_user_id'").get();                                     
+       17 +  if (!row) return null;                                      
+       18 +  const user = db.prepare('SELECT id FROM users WHERE id = ?')
+          +.get(Number(row.value));                                      
+       19 +  return user?.id ?? null;                                    
+       20  }
+       21  
+       27 -function publicUser(u) {                                      
+       28 -  return { id: u.id, username: u.username, name: u.name, glyph
+          -: u.glyph };                                                  
+       22 +function setCurrentUser(id) {                                 
+       23 +  db.prepare("INSERT INTO config (key, value) VALUES ('local_u
+          +ser_id', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.va
+          +lue")                                                         
+       24 +    .run(String(id));                                         
+       25  }
+       26  
+       31 -// Returns current user from cookie, or null                  
+       27 +// Returns the active profile, or null when none is chosen yet
+       28  router.get('/me', (req, res) => {
+       33 -  const token = req.cookies?.token;                           
+       34 -  if (!token) return res.json(null);                          
+       35 -  try {                                                       
+       36 -    const { id } = jwt.verify(token, jwtSecret);              
+       37 -    const user = db.prepare('SELECT id, username, name, glyph 
+          -FROM users WHERE id = ?').get(id);                            
+       38 -    res.json(user ?? null);                                   
+       39 -  } catch {                                                   
+       40 -    res.clearCookie('token');                                 
+       41 -    res.json(null);                                           
+       42 -  }                                                           
+       29 +  const id = currentUserId();                                 
+       30 +  res.json(id ? publicUser(db.prepare('SELECT * FROM users WHE
+          +RE id = ?').get(id)) : null);                                 
+       31  });
+       32  
+       45 -router.post('/register', async (req, res) => {                
+       46 -  const { username, name, glyph, password } = req.body;       
+       47 -  if (!username?.trim() || !name?.trim() || !password)        
+       48 -    return res.status(400).json({ error: 'username, name and p
+          -assword are required' });                                     
+       49 -  if (password.length < 8)                                    
+       50 -    return res.status(400).json({ error: 'Password must be at 
+          -least 8 characters' });                                       
+       51 -  if (db.prepare('SELECT 1 FROM users WHERE username = ?').get
+          -(username.trim().toLowerCase()))                              
+       52 -    return res.status(409).json({ error: 'Username already tak
+          -en' });                                                       
+       53 -                                                              
+       54 -  const hash = await bcrypt.hash(password, 12);               
+       55 -  const { lastInsertRowid: userId } = db.prepare(             
+       56 -    'INSERT INTO users (username, name, glyph, password_hash) 
+          -VALUES (?, ?, ?, ?)'                                          
+       57 -  ).run(username.trim().toLowerCase(), name.trim(), glyph || '
+          -🏋️', hash);                                                   
+       58 -                                                              
+       59 -  // Claim any pre-existing unclaimed plans and sessions (migr
+          -ation path)                                                   
+       60 -  db.prepare('UPDATE workout_plans SET user_id = ? WHERE user_
+          -id IS NULL').run(userId);                                     
+       61 -  db.prepare('UPDATE sessions SET user_id = ? WHERE user_id IS
+          - NULL').run(userId);                                          
+       62 -                                                              
+       63 -  setToken(res, req, userId);                                 
+       64 -  const user = db.prepare('SELECT id, username, name, glyph FR
+          -OM users WHERE id = ?').get(userId);                          
+       65 -  res.status(201).json(publicUser(user));                     
+       33 +router.get('/users', (_req, res) => {                         
+       34 +  res.json(db.prepare('SELECT * FROM users ORDER BY id').all()
+          +.map(publicUser));                                            
+       35  });
+       36  
+       68 -router.post('/login', loginLimiter, async (req, res) => {     
+       69 -  const { username, password } = req.body;                    
+       70 -  const user = db.prepare('SELECT * FROM users WHERE username 
+          -= ?').get(username?.trim()?.toLowerCase() ?? '');             
+       71 -  if (!user) return res.status(401).json({ error: 'Invalid use
+          -rname or password' });                                        
+       72 -  const ok = await bcrypt.compare(password, user.password_hash
+          -);                                                            
+       73 -  if (!ok) return res.status(401).json({ error: 'Invalid usern
+          -ame or password' });                                          
+       74 -  setToken(res, req, user.id);                                
+       37 +router.post('/select', (req, res) => {                        
+       38 +  const user = db.prepare('SELECT * FROM users WHERE id = ?').
+          +get(req.body.id);                                             
+       39 +  if (!user) return res.status(404).json({ error: 'Not found' 
+          +});                                                           
+       40 +  setCurrentUser(user.id);                                    
+       41    res.json(publicUser(user));
+       42  });
+       43  
+       78 -router.post('/logout', (req, res) => {                        
+       79 -  res.clearCookie('token', cookieOpts(req));                  
+       80 -  res.json({ ok: true });                                     
+       81 -});                                                           
+       44 +router.post('/register', (req, res) => {                      
+       45 +  const { name, glyph } = req.body;                           
+       46 +  if (!name?.trim()) return res.status(400).json({ error: 'nam
+          +e is required' });                                            
+       47  
+       83 -router.patch('/me', requireAuth, async (req, res) => {        
+       84 -  try {                                                       
+       85 -    const { name, glyph, current_password, new_password } = re
+          -q.body;                                                       
+       86 -    const user = db.prepare('SELECT * FROM users WHERE id = ?'
+          -).get(req.user.id);                                           
+       48 +  const base = name.trim().toLowerCase().replace(/[^a-z0-9]+/g
+          +, '') || 'me';                                                
+       49 +  let username = base;                                        
+       50 +  for (let n = 2; db.prepare('SELECT 1 FROM users WHERE userna
+          +me = ?').get(username); n++)                                  
+       51 +    username = `${base}${n}`;                                 
+       52  
+       88 -    const updates = {};                                       
+       89 -    if (name?.trim())  updates.name  = name.trim();           
+       90 -    if (glyph)         updates.glyph = glyph;                 
+       53 +  const userId = db.transaction(() => {                       
+       54 +    const { lastInsertRowid: id } = db.prepare(               
+       55 +      "INSERT INTO users (username, name, glyph, password_hash
+          +) VALUES (?, ?, ?, '')"                                       
+       56 +    ).run(username, name.trim(), glyph || '🏋️');              
+       57 +    // Claim any pre-existing unclaimed plans and sessions (sa
+          +mple plan, migrations)                                        
+       58 +    db.prepare('UPDATE workout_plans SET user_id = ? WHERE use
+          +r_id IS NULL').run(id);                                       
+       59 +    db.prepare('UPDATE sessions SET user_id = ? WHERE user_id 
+          +IS NULL').run(id);                                            
+       60 +    setCurrentUser(id);                                       
+       61 +    return id;                                                
+       62 +  })();                                                       
+       63  
+       92 -    if (new_password) {                                       
+       93 -      if (!current_password)                                  
+       94 -        return res.status(400).json({ error: 'Current password
+          - required' });                                                
+       95 -      const ok = await bcrypt.compare(current_password, user.p
+          -assword_hash);                                                
+       96 -      if (!ok) return res.status(401).json({ error: 'Incorrect
+          - current password' });                                        
+       97 -      if (new_password.length < 8)                            
+       98 -        return res.status(400).json({ error: 'Password must be
+          - at least 8 characters' });                                   
+       99 -      updates.password_hash = await bcrypt.hash(new_password, 
+          -12);                                                          
+      100 -    }                                                         
+       64 +  res.status(201).json(publicUser(db.prepare('SELECT * FROM us
+          +ers WHERE id = ?').get(userId)));                             
+       65 +});                                                           
+       66  
+      102 -    if (Object.keys(updates).length === 0) return res.json(pub
+          -licUser(user));                                               
+       67 +router.patch('/me', (req, res) => {                           
+       68 +  const id = currentUserId();                                 
+       69 +  if (!id) return res.status(401).json({ error: 'No profile' }
+          +);                                                            
+       70 +  const { name, glyph } = req.body;                           
+       71 +  const updates = {};                                         
+       72 +  if (name?.trim()) updates.name  = name.trim();              
+       73 +  if (glyph)        updates.glyph = glyph;                    
+       74 +  if (Object.keys(updates).length) {                          
+       75      const setClause = Object.keys(updates).map(k => `${k} = ?`
+           ).join(', ');
+      104 -    db.prepare(`UPDATE users SET ${setClause} WHERE id = ?`).r
+          -un(...Object.values(updates), req.user.id);                   
+      105 -    res.json(publicUser(db.prepare('SELECT id, username, name,
+          - glyph FROM users WHERE id = ?').get(req.user.id)));          
+      106 -  } catch (err) {                                             
+      107 -    console.error('PATCH /me error:', err);                   
+      108 -    res.status(500).json({ error: 'Internal server error' }); 
+       76 +    db.prepare(`UPDATE users SET ${setClause} WHERE id = ?`).r
+          +un(...Object.values(updates), id);                            
+       77    }
+       78 +  res.json(publicUser(db.prepare('SELECT * FROM users WHERE id
+          + = ?').get(id)));                                             
+       79  });
+       80  
+       81  export default router;
+
+⏺ Write(client/src/backend/storage.js)  ⎿  Wrote 44 lines to client/src/backend/storage.js
+       1 // Durable on-device storage for database file images, backed by
+          IndexedDB.
+       2 // Falls back to an in-memory map where IndexedDB doesn't exist 
+       3 
+       4 const DB_NAME = 'fitnesstrack';
+       5 const STORE   = 'files';
+       6 
+       8 let opening  = null;
+       9 
+      10 function open() {
+     … +36 lines (ctrl+o to expand)
+
+⏺ Bash(python3 - <<'EOF'
+      p='routes/stats.js'…)
+  ⎿  289-  const ts   = new Date().toISOString().replace(/[:.]/g, '-').slic
+     e(0, 19);
+     290-  const file = `fitness-backup-${ts}.db`;
+     … +10 lines (ctrl+o to expand)
+  ⎿  Updated client/src/backend/routes/stats.js (+4 -3)
+      1  import { Router } from '../router.js';
+      2 -import { join, dirname } from 'path';                           
+      3 -import db, { dbPath } from '../db.js';                          
+      2 +import db from '../db.js';                                      
+      3  import { selectProgressWeeks } from '../statsWeeks.js';
+      4 +import { saveFile } from '../storage.js';                       
+      5  
+      6  const router = Router();
+      7  
+     ...
+      289    const ts   = new Date().toISOString().replace(/[:.]/g, '-').
+           slice(0, 19);
+      290    const file = `fitness-backup-${ts}.db`;
+      291    try {
+      292 -    await db.backup(join(dirname(dbPath), file));             
+      292 +    // Keep the pre-reset database on the device; Setup offers
+          + it for restore.                                              
+      293 +    await saveFile('pre-reset-backup', { name: file, bytes: db
+          +.export() });                                                 
+      294      db.transaction(() => {
+      295        for (const { id } of db.prepare('SELECT id FROM workout_
+           plans WHERE user_id = ?').all(uid))
+      296          db.prepare('DELETE FROM set_targets WHERE plan_id = ?'
+           ).run(id);
+
+⏺ Now the backend entry: mounts the routers, serializes requests like a
+  single-threaded server, and persists to IndexedDB after any write.
+
+⏺ Bash(python3 - <<'EOF'
+      p='sqlite.js'…)
+  ⎿  63:    this.facade.dirty = true;
+     84:    this.dirty  = false;      // set by any write; cleared by the p
+     ersistence layer
+     … +2 lines (ctrl+o to expand)
+  ⎿  Updated client/src/backend/sqlite.js (+3 -7)
+      60    }
+      61  
+      62    run(...args) {
+      63 +    this.facade.dirty = true;                                  
+      64      const st = this._stmt();
+      65      try {
+      66        st.bind(toParams(args));
+     ...
+      81      this.raw    = null;
+      82      this.cache  = new Map();
+      83      this.depth  = 0;          // transaction nesting depth
+      84 +    this.dirty  = false;      // set by any write; cleared by t
+         +he persistence layer                                           
+      85    }
+      86  
+      87    // Point the facade at a (new) sql.js Database instance.
+     ...
+      107  
+      108    prepare(sql) { return new Statement(this, sql); }
+      109  
+      108 -  exec(sql) { this.raw.exec(sql); return this; }              
+      110 +  exec(sql) { this.dirty = true; this.raw.exec(sql); return th
+          +is; }                                                         
+      111  
+      112    pragma(str) {
+      113      const res = this.raw.exec(`PRAGMA ${str}`);
+     ...
+      116      return values.map(v => Object.fromEntries(columns.map((c, 
+           i) => [c, v[i]])));
+      117    }
+      118  
+      117 -  // Monotonic count of rows changed since the database was op
+          -ened — lets the                                               
+      118 -  // caller detect whether a request wrote anything and needs 
+          -persisting.                                                   
+      119 -  totalChanges() {                                            
+      120 -    return this.raw.exec('SELECT total_changes()')[0].values[0
+          -][0];                                                         
+      121 -  }                                                           
+      122 -                                                              
+      119    // Same contract as better-sqlite3: returns a function that 
+           runs `fn` inside
+      120    // a transaction, committing on return and rolling back on t
+           hrow. Nested
+      121    // calls use savepoints.
+
+⏺ Write(client/src/backend/app.js)
+  ⎿  Wrote 125 lines to client/src/backend/app.js
+       1 // In-browser backend. Replaces the old Express server: the same
+          route modules
+         base file image
+       3 // is written to IndexedDB after every request that changed anyt
+         hing.
+       5 import db, { migrate } from './db.js';
+       6 import { seed } from './seed.js';
+       7 import { dispatch } from './router.js';
+       9 import { loadFile, saveFile } from './storage.js';
+      10 import authRouter, { currentUserId } from './routes/auth.js';
+     … +136 lines (ctrl+o to expand)
+
+⏺ Write(client/src/backend/index.js)
+  ⎿  Wrote 12 lines to client/src/backend/index.js
+       1 // Browser entry for the backend: loads the SQLite WASM build, o
+       2 // on-device database, and exposes the request handler to the AP
+         I layer.
+       3 import initSqlJs from 'sql.js';
+       5 import { start } from './app.js';
+       6 
+         up, restorePreResetBackup } from './app.js';
+       8 
+       9 // Ask the browser not to evict our storage under pressure (best
+      10 navigator.storage?.persist?.().catch(() => {});
+     … +7 lines (ctrl+o to expand)
+
+⏺ Bash(cd /Users/philb/localhost/fitnesstrack && cat client/src/main.jsx; sed -n
+      1,20p client/src/pages/StatsPage.jsx; sed -n 80,118p
+      client/src/pages/StatsPage.jsx; s…)
+  ⎿  import { StrictMode } from 'react';
+     import { createRoot } from 'react-dom/client';
+     import { BrowserRouter } from 'react-router-dom';
+     … +130 lines (ctrl+o to expand)
+
+⏺ Write(client/src/api/index.js)
+  ⎿  Added 30 lines, removed 20 lines
+       1 -async function req(method, path, body) {                       
+       2 -  const res = await fetch(`/api${path}`, {                     
+       3 -    method,                                                    
+       4 -    credentials: 'include',                                    
+       5 -    headers: body ? { 'Content-Type': 'application/json' } : {}
+         -,                                                              
+       6 -    body: body ? JSON.stringify(body) : undefined,             
+       7 -  });                                                          
+       8 -  if (res.status === 401) {                                    
+       1 +import {                                                       
+       2 +  ready, handle, exportDatabase, importDatabase, getPreResetBac
+         +kup, restorePreResetBackup,                                    
+       3 +} from '../backend/index.js';                                  
+       4 +                                                               
+       5 +// Requests are served in-process by the on-device backend (src
+         +/backend) —                                                    
+       6 +// same paths and payloads the old HTTP API used, no network in
+         +volved.                                                        
+       7 +async function call(method, path, body) {                      
+       8 +  await ready;                                                 
+       9 +  const res = await handle(method, path, body);                
+      10 +  if (res.statusCode === 401) {                                
+      11      window.dispatchEvent(new CustomEvent('auth:expired'));
+      10 -    throw new Error('Session expired');                        
+      12 +    throw new Error('No profile selected');                    
+      13    }
+      12 -  if (!res.ok) throw new Error(`${method} /api${path} → ${res.s
+         -tatus}`);                                                      
+      13 -  return res.json();                                           
+      14 +  if (res.statusCode >= 400) throw new Error(res.body?.error ??
+         + `${method} ${path} → ${res.statusCode}`);                     
+      15 +  return res;                                                  
+      16  }
+      17  
+      18 +const req = async (method, path, body) => (await call(method, p
+         +ath, body)).body;                                              
+      19 +                                                               
+      20  export const api = {
+      21    // Sessions
+      18 -  getToday:           ()                   => req('GET', '/sess
+         -ions/today'),                                                  
+      19 -  getSessionForDate:  (date)               => req('GET', `/sess
+         -ions/date/${date}`),                                           
+      22    getSessionForSlot:  (planId, week, dow)  => req('GET', `/sess
+          ions/slot?plan_id=${planId}&week=${week}&dow=${dow}`),
+      23    skipSession:       (id)       => req('POST',   `/sessions/${i
+          d}/skip`),
+      24    unlockSession:     (id)       => req('POST',   `/sessions/${i
+          d}/unlock`),
+     ...
+      57    // Stats
+      58    getStats:   (scope = 'all') => req('GET',  `/stats?scope=${sc
+          ope}`),
+      59    resetStats: ()              => req('POST', '/stats/reset'),
+      60 +  // Returns { filename, csv }                                 
+      61 +  exportStats: async (type, scope) => {                        
+      62 +    const res = await call('GET', `/stats/export?type=${type}&s
+         +cope=${scope}`);                                               
+      63 +    const filename = res.headers['content-disposition']?.match(
+         +/filename="([^"]+)"/)?.[1] ?? `${type}.csv`;                   
+      64 +    return { filename, csv: res.body };                        
+      65 +  },                                                           
+      66  
+      59 -  // Admin                                                     
+      60 -  triggerUpdate:    () => req('POST', '/admin/update'),        
+      61 -  getUpdateStatus:  () => req('GET',  '/admin/update-status'), 
+      62 -                                                               
+      63 -  // Auth                                                      
+      67 +  // Profile                                                   
+      68    getMe:         ()       => req('GET',   '/auth/me'),
+      65 -  login:         (body)   => req('POST',  '/auth/login',    bod
+         -y),                                                            
+      69 +  getUsers:      ()       => req('GET',   '/auth/users'),      
+      70 +  selectUser:    (id)     => req('POST',  '/auth/select', { id 
+         +}),                                                            
+      71    register:      (body)   => req('POST',  '/auth/register', bod
+          y),
+      67 -  logout:        ()       => req('POST',  '/auth/logout'),     
+      72    updateProfile: (body)   => req('PATCH', '/auth/me',       bod
+          y),
+      73  
+      74    // Exercises
+     ...
+      80    getEquipment:    ()            => req('GET',    '/exercises/e
+          quipment'),
+      81    addEquipment:    (equipment)   => req('POST',   '/exercises/e
+          quipment', { equipment }),
+      82    removeEquipment: (name)        => req('DELETE', `/exercises/e
+          quipment/${encodeURIComponent(name)}`),
+      83 +                                                               
+      84 +  // Device database backup / restore                          
+      85 +  exportDatabase:        async () => { await ready; return expo
+         +rtDatabase(); },                                               
+      86 +  importDatabase:        async (bytes) => { await ready; return
+         + importDatabase(bytes); },                                     
+      87 +  getPreResetBackup:     async () => { await ready; return getP
+         +reResetBackup(); },                                            
+      88 +  restorePreResetBackup: async () => { await ready; return rest
+         +orePreResetBackup(); },                                        
+      89  };
+
+⏺ Write(client/src/files.js)
+  ⎿  Wrote 38 lines to client/src/files.js
+       1 // Hand a generated file to the user. On phones the share sheet 
+       2 // route (it offers "Save to Files", AirDrop, Drive, …) — an ins
+         talled PWA can't
+       3 // always trigger a plain download. Desktops get an ordinary dow
+       4 export async function saveFile(data, filename, type) {
+       5   const file = new File([data], filename, { type });
+         ;
+       7   if (touch && navigator.canShare?.({ files: [file] })) {
+       8     try {
+      10       return;
+     … +32 lines (ctrl+o to expand)
+
+⏺ Bash(cd /Users/philb/localhost/fitnesstrack/client/src/pages && sed -n
+      112,120p StatsPage.jsx)
+  ⎿        </div>
+         </div>
+       );
+     … +8 lines (ctrl+o to expand)
+
+⏺ The backend port is done (browser SQLite shim, router, IndexedDB persistence,
+  local profiles). Next I'll update the UI pages that relied on server-only
+  features: CSV export, data reset, setup/updater, and login.
+
+⏺ Bash(python3 - <<'EOF'
+      p='StatsPage.jsx'…)
+  ⎿  4:import { saveFile } from '../files.js';
+     57:  const [backup,  setBackup]  = useState(null);
+     64:      setBackup(data.backup);
+     … +13 lines (ctrl+o to expand)
+  ⎿  Updated client/src/pages/StatsPage.jsx (+5 -13)
+      1  import { useState, useEffect, useCallback } from 'react';
+      2  import { api } from '../api/index.js';
+      3  import { useUnit } from '../units.js';
+      4 +import { saveFile } from '../files.js';                         
+      5  import {
+      6    AreaChart, Area, PieChart, Pie, Cell,
+      7    LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Respons
+         iveContainer,
+     ...
+      77      <div style={overlay}>
+      78        <div style={box}>
+      79          <strong style={{ color: 'var(--text)', fontSize: '1rem'
+           }}>Data reset complete</strong>
+      79 -        <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(
+         ---muted)', lineHeight: 1.5 }}>All training data deleted. Backup
+         - saved to:</p>                                                 
+      80 +        <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(
+         +--muted)', lineHeight: 1.5 }}>All training data deleted. A back
+         +up was kept on this device — restore it from Setup → Data:</p> 
+      81          <code style={{ fontSize: '0.78rem', color: 'var(--dim)'
+          , background: 'var(--surface)', padding: '0.6rem 0.75rem', bord
+          erRadius: '6px', wordBreak: 'break-all' }}>{backup}</code>
+      82          <button onClick={onClose} style={{ padding: '0.85rem', 
+          minHeight: '48px', border: 'none', borderRadius: '8px', backgro
+          und: 'var(--btn)', color: 'var(--btn-text)', fontWeight: '700',
+           fontSize: '0.95rem', cursor: 'pointer' }}>Done</button>
+      83        </div>
+     ...
+       94          </div>
+       95          <p style={{ margin: 0, fontSize: '0.9rem', color: 'var
+           (--muted)', lineHeight: 1.55 }}>
+       96            Permanently deletes all sessions, logged sets, check
+           -ins, and set targets.
+       96 -          A timestamped backup is created before deletion.    
+       97 +          A backup is kept on this device before deletion.    
+       98          </p>
+       99          <div>
+      100            <p style={{ margin: '0 0 0.35rem', fontSize: '0.8rem
+           ', color: 'var(--dim)' }}>Type to confirm:</p>
+     ...
+      118  // ── Main page ──────────────────────────────────────────────
+           ───────────────────
+      119  
+      120  async function downloadExport(type, scope) {
+      120 -  const res = await fetch(`/api/stats/export?type=${type}&scop
+          -e=${scope}`, { credentials: 'include' });                     
+      121 -  if (!res.ok) throw new Error(`Export failed (${res.status})`
+          -);                                                            
+      122 -  const ct = res.headers.get('Content-Type') ?? '';           
+      123 -  if (!ct.startsWith('text/csv')) throw new Error('Export fail
+          -ed — server returned unexpected content type. Try restarting t
+          -he server.');                                                 
+      124 -  const cd       = res.headers.get('Content-Disposition') ?? '
+          -';                                                            
+      125 -  const filename = cd.match(/filename="([^"]+)"/)?.[1] ?? `${t
+          -ype}.csv`;                                                    
+      126 -  const blob     = await res.blob();                          
+      127 -  const url      = URL.createObjectURL(blob);                 
+      128 -  const a        = document.createElement('a');               
+      129 -  a.href = url; a.download = filename; a.click();             
+      130 -  URL.revokeObjectURL(url);                                   
+      121 +  const { filename, csv } = await api.exportStats(type, scope)
+          +;                                                             
+      122 +  await saveFile(csv, filename, 'text/csv');                  
+      123  }
+     … 2 more lines (ctrl+o to expand)
+
+⏺ Write(client/src/pwa.js)
+  ⎿  Wrote 72 lines to client/src/pwa.js
+       1 import { useEffect, useState } from 'react';
+       3 // Service-worker registration + update flow. The worker (genera
+         ted at build
+       4 // time, see vite-plugin-sw.js) precaches the whole app so it ru
+       5 // A new deploy installs alongside the running version and waits
+         ; the UI
+       7 
+       8 let registration = null;
+       9 const listeners  = new Set();
+          | unsupported
+     … +78 lines (ctrl+o to expand)
+
+⏺ Write(client/src/main.jsx)
+  ⎿  Added 8 lines, removed 3 lines
+       1  import { StrictMode } from 'react';
+       2  import { createRoot } from 'react-dom/client';
+       3 -import { BrowserRouter } from 'react-router-dom';              
+       3 +import { HashRouter } from 'react-router-dom';                 
+       4  import App from './App.jsx';
+       5 +import { registerServiceWorker } from './pwa.js';              
+       6  
+       7 +registerServiceWorker();                                       
+       8 +                                                               
+       9 +// HashRouter: the app is a static bundle that may be served fr
+         +om any path                                                    
+      10 +// (e.g. GitHub Pages' /<repo>/) with no server-side SPA fallba
+         +ck.                                                            
+      11  createRoot(document.getElementById('root')).render(
+      12    <StrictMode>
+       8 -    <BrowserRouter>                                            
+      13 +    <HashRouter>                                               
+      14        <App />
+      10 -    </BrowserRouter>                                           
+      15 +    </HashRouter>                                              
+      16    </StrictMode>
+      17  );
+
+⏺ Bash(python3 - <<'EOF'
+      p='stubs.jsx'…)
+  ⎿  123:            {update === 'latest' && <span style={{ fontSize: '0.87
+     5rem', color: 'var(--success)' }}>You're on the latest version.</span>
+     }
+  ⎿  Updated client/src/pages/stubs.jsx (+105 -102)
+       1 -import { useState, useEffect, useRef } from 'react';           
+       1 +import { useState, useEffect } from 'react';                   
+       2  import { api } from '../api/index.js';
+       3  import { useUnit } from '../units.js';
+       4 +import { useAuth } from '../auth.jsx';                         
+       5  import { ExerciseEditModal } from '../components/ExerciseEditMo
+          dal.jsx';
+       6 +import { saveFile, pickFile } from '../files.js';              
+       7 +import { useAppUpdate, checkForUpdate, applyUpdate } from '../p
+         +wa.js';                                                        
+       8  
+       9  const ALL_EQUIPMENT = ['barbell', 'dumbbell', 'cable', 'machine
+          ', 'bodyweight'];
+      10  
+     ...
+      16    const [editTarget, setEdit]     = useState(null);
+      17    const [loading, setLoading]     = useState(true);
+      18    const { unit, toggle }          = useUnit();
+      16 -  const [version, setVersion]         = useState(null);        
+      17 -  const [updateState, setUpdateState] = useState('idle'); // id
+         -le | building | restarting | done | error                      
+      18 -  const [updateLog, setUpdateLog]     = useState('');          
+      19 -  const pollRef = useRef(null);                                
+      19 +  const update                    = useAppUpdate();            
+      20  
+      21    useEffect(() => {
+      22      Promise.all([api.getEquipment(), api.getCustomExercises()])
+     ...
+      25          setCustoms(exList);
+      26          setLoading(false);
+      27        });
+      28 -    fetch('/api/version').then(r => r.json()).then(d => setVers
+         -ion(d.version)).catch(() => {});                               
+      29 -    return () => clearInterval(pollRef.current);               
+      28    }, []);
+      29  
+      32 -  function waitForRestart() {                                  
+      33 -    setUpdateState('restarting');                              
+      34 -    const start = Date.now();                                  
+      35 -    pollRef.current = setInterval(async () => {                
+      36 -      if (Date.now() - start > 3 * 60 * 1000) {                
+      37 -        clearInterval(pollRef.current);                        
+      38 -        setUpdateLog('Server did not come back within 3 minutes
+         -.');                                                           
+      39 -        setUpdateState('error');                               
+      40 -        return;                                                
+      41 -      }                                                        
+      42 -      try {                                                    
+     … 202 more lines (ctrl+o to expand)
+
+⏺ Write(client/src/auth.jsx)
+  ⎿  Added 12 lines, removed 6 lines
+       1 -import { createContext, useContext, useState, useEffect } from 
+         -'react';                                                       
+       1 +import { createContext, useContext, useState, useEffect, useCal
+         +lback } from 'react';                                          
+       2  import { api } from './api/index.js';
+       3  
+       4  const AuthContext = createContext(null);
+       5  
+       6  export function AuthProvider({ children }) {
+       7 -  const [user, setUser] = useState(undefined); // undefined = l
+         -oading                                                         
+       7 +  const [user, setUser]   = useState(undefined); // undefined =
+         + loading                                                       
+       8 +  const [error, setError] = useState(null);      // the on-devi
+         +ce database failed to open                                     
+       9  
+       9 -  useEffect(() => {                                            
+      10 -    api.getMe().then(setUser).catch(() => setUser(null));      
+      11 -  }, []);                                                      
+      10 +  // Re-read the active profile — after a backup import the who
+         +le database,                                                   
+      11 +  // and possibly the profile, has changed.                    
+      12 +  const reload = useCallback(                                  
+      13 +    () => api.getMe().then(setUser).catch(err => { console.erro
+         +r(err); setError(err); }),                                     
+      14 +    []                                                         
+      15 +  );                                                           
+      16  
+      17 +  useEffect(() => { reload(); }, [reload]);                    
+      18 +                                                               
+      19    useEffect(() => {
+      20      function handleExpired() { setUser(null); }
+      21      window.addEventListener('auth:expired', handleExpired);
+     ...
+      23    }, []);
+      24  
+      25    return (
+      20 -    <AuthContext.Provider value={{ user, setUser }}>           
+      26 +    <AuthContext.Provider value={{ user, setUser, reload, error
+         + }}>                                                           
+      27        {children}
+      28      </AuthContext.Provider>
+      29    );
+
+⏺ Bash(cd /Users/philb/localhost/fitnesstrack/client/src && python3 - <<'EOF'
+      p='pages/stubs.jsx'…)
+  ⎿  pages/stubs.jsx:114:          <button onClick={applyUpdate} style={pri
+     maryBtn}>Update available — reload</button>
+     pages/stubs.jsx:170:  // resolves), so reload the app rather than patc
+     … +2 lines (ctrl+o to expand)
+  ⎿  Updated client/src/auth.jsx (+5 -10)
+      1 -import { createContext, useContext, useState, useEffect, useCall
+        -back } from 'react';                                            
+      1 +import { createContext, useContext, useState, useEffect } from '
+        +react';                                                         
+      2  import { api } from './api/index.js';
+      3  
+      4  const AuthContext = createContext(null);
+     ...
+       7    const [user, setUser]   = useState(undefined); // undefined =
+           loading
+       8    const [error, setError] = useState(null);      // the on-devi
+          ce database failed to open
+       9  
+      10 -  // Re-read the active profile — after a backup import the who
+         -le database,                                                   
+      11 -  // and possibly the profile, has changed.                    
+      12 -  const reload = useCallback(                                  
+      13 -    () => api.getMe().then(setUser).catch(err => { console.erro
+         -r(err); setError(err); }),                                     
+      14 -    []                                                         
+      15 -  );                                                           
+      16 -                                                               
+      17 -  useEffect(() => { reload(); }, [reload]);                    
+      10 +  useEffect(() => {                                            
+      11 +    api.getMe().then(setUser).catch(err => { console.error(err)
+         +; setError(err); });                                           
+      12 +  }, []);                                                      
+      13  
+      14    useEffect(() => {
+      15      function handleExpired() { setUser(null); }
+     ...
+      18    }, []);
+      19  
+      20    return (
+      26 -    <AuthContext.Provider value={{ user, setUser, reload, error
+         - }}>                                                           
+      21 +    <AuthContext.Provider value={{ user, setUser, error }}>    
+      22        {children}
+      23      </AuthContext.Provider>
+      24    );
+  ⎿  Updated client/src/pages/stubs.jsx (+9 -9)
+      1  import { useState, useEffect } from 'react';
+      2  import { api } from '../api/index.js';
+      3  import { useUnit } from '../units.js';
+      4 -import { useAuth } from '../auth.jsx';                          
+      4  import { ExerciseEditModal } from '../components/ExerciseEditMod
+         al.jsx';
+      5  import { saveFile, pickFile } from '../files.js';
+      6  import { useAppUpdate, checkForUpdate, applyUpdate } from '../pw
+         a.js';
+     ...
+      142  const secondaryBtn = { padding: '0.7rem 1.1rem', minHeight: '4
+           4px', background: 'none', border: '1px solid var(--border)', b
+           orderRadius: '8px', color: 'var(--text)', fontSize: '0.9rem', 
+           fontWeight: '500', cursor: 'pointer' };
+      143  
+      144  function DataSection() {
+      146 -  const { reload }                = useAuth();                
+      145    const [busy, setBusy]           = useState(null);   // 'expo
+           rt' | 'import' | 'restore'
+      148 -  const [message, setMessage]     = useState(null);   // { ok,
+          - text }                                                       
+      146 +  const [message, setMessage]     = useState(null);   // { ok,
+          + text } — errors only                                         
+      147    const [confirmImport, setConfirm] = useState(null); // bytes
+            awaiting confirmation
+      148    const [preReset, setPreReset]   = useState(null);
+      149  
+     ...
+      166      if (bytes) setConfirm(bytes);
+      167    }
+      168  
+      171 -  async function run(kind, fn, okText) {                      
+      169 +  // Import/restore swap the whole database (already persisted
+          + when fn                                                      
+      170 +  // resolves), so reload the app rather than patch every page
+          +'s state.                                                     
+      171 +  async function run(kind, fn) {                              
+      172      setBusy(kind); setMessage(null);
+      173      try {
+      174        await fn();
+      175 -      setMessage({ ok: true, text: okText });                 
+      176 -      await reload();                                         
+      175 +      window.location.reload();                               
+      176      } catch (e) {
+      177        setMessage({ ok: false, text: e.message });
+      179 -    } finally { setBusy(null); }                              
+      178 +      setBusy(null);                                          
+      179 +    }                                                         
+      180    }
+      181  
+      182    return (
+     ...
+      197          </button>
+      198          {preReset && (
+     … 14 more lines (ctrl+o to expand)
+
+⏺ Write(client/src/pages/AuthPage.jsx)
+  ⎿  Added 80 lines, removed 88 lines
+       1 -import { useState } from 'react';                              
+       1 +import { useState, useEffect } from 'react';                   
+       2  import { useNavigate } from 'react-router-dom';
+       3  import { api } from '../api/index.js';
+       4  import { useAuth } from '../auth.jsx';
+       5 +import { pickFile } from '../files.js';                        
+       6  import { BarbellLogo, GlyphPicker, field } from '../ui.jsx';
+       7  
+       8 +// First-run screen. Data lives on this device, so there's no l
+         +ogin — just                                                    
+       9 +// create a profile, restore a backup, or (for a database impor
+         +ted from the old                                               
+      10 +// multi-user server) pick which of its profiles is yours.     
+      11  export default function AuthPage() {
+      12    const { setUser } = useAuth();
+      13    const navigate = useNavigate();
+      10 -  const [tab, setTab]           = useState('login');           
+      11 -  const [username, setUsername] = useState('');                
+      12 -  const [password, setPassword] = useState('');                
+      13 -  const [confirm, setConfirm]   = useState('');                
+      14 -  const [name, setName]         = useState('');                
+      15 -  const [glyph, setGlyph]       = useState('🏋️');              
+      16 -  const [error, setError]       = useState('');                
+      17 -  const [busy, setBusy]         = useState(false);             
+      14 +  const [users, setUsers]   = useState(null);                  
+      15 +  const [creating, setCreating] = useState(false);             
+      16 +  const [name, setName]     = useState('');                    
+      17 +  const [glyph, setGlyph]   = useState('🏋️');                  
+      18 +  const [error, setError]   = useState('');                    
+      19 +  const [busy, setBusy]     = useState(false);                 
+      20  
+      19 -  function switchTab(t) { setTab(t); setError(''); }           
+      21 +  useEffect(() => { api.getUsers().then(setUsers).catch(() => s
+         +etUsers([])); }, []);                                          
+      22  
+      21 -  async function handleSubmit(e) {                             
+      23 +  async function attempt(fn) {                                 
+      24 +    setError(''); setBusy(true);                               
+      25 +    try { await fn(); }                                        
+      26 +    catch (err) { setError(err.message || 'Something went wrong
+         + — try again'); }                                              
+      27 +    finally { setBusy(false); }                                
+      28 +  }                                                            
+      29 +                                                               
+      30 +  function handleCreate(e) {                                   
+      31      e.preventDefault();
+      23 -    setError('');                                              
+      24 -    if (tab === 'register' && password !== confirm) {          
+      25 -      setError('Passwords do not match'); return;              
+      26 -    }                                                          
+      27 -    setBusy(true);                                             
+      28 -    try {                                                      
+      29 -      const isRegister = tab === 'register';                   
+      30 -      const user = isRegister                                  
+      31 -        ? await api.register({ username, password, name, glyph 
+         -})                                                             
+      32 -        : await api.login({ username, password });             
+      33 -      setUser(user);                                           
+      34 -      if (isRegister) navigate('/setup');                      
+      35 -    } catch (err) {                                            
+      36 -      const msg = err.message ?? '';                           
+      37 -      // Try to extract the server error message from the respo
+         -nse                                                            
+      38 -      setError(msg.includes('409') ? 'Username already taken'  
+      39 -             : msg.includes('401') ? 'Invalid username or passw
+         -ord'                                                           
+      40 -             : msg.includes('400') ? 'Please fill in all requir
+         -ed fields'                                                     
+      41 -             : 'Something went wrong — try again');            
+      42 -    } finally {                                                
+      43 -      setBusy(false);                                          
+      44 -    }                                                          
+      32 +    attempt(async () => {                                      
+      33 +      setUser(await api.register({ name, glyph }));            
+      34 +      navigate('/setup');                                      
+      35 +    });                                                        
+      36    }
+      37  
+      47 -  const tabBtn = (t, label) => (                               
+      48 -    <button type="button" onClick={() => switchTab(t)} style={{
+      49 -      flex: 1, padding: '0.95rem', minHeight: '48px',          
+      50 -      background: 'none', border: 'none',                      
+      51 -      borderBottom: `2px solid ${tab === t ? 'var(--text)' : 't
+         -ransparent'}`,                                                 
+      52 -      color: tab === t ? 'var(--text)' : 'var(--muted)',       
+      53 -      fontWeight: tab === t ? '700' : '500',                   
+      54 -      fontSize: '0.95rem', cursor: 'pointer',                  
+      55 -    }}>{label}</button>                                        
+      56 -  );                                                           
+      38 +  function handleRestore() {                                   
+      39 +    attempt(async () => {                                      
+      40 +      const bytes = await pickFile();                          
+      41 +      if (!bytes) return;                                      
+      42 +      await api.importDatabase(bytes);                         
+      43 +      const me = await api.getMe();                            
+      44 +      if (me) setUser(me);                                     
+      45 +      else setUsers(await api.getUsers());                     
+      46 +    });                                                        
+      47 +  }                                                            
+      48  
+      49 +  const labelStyle = { display: 'block', fontSize: '0.8rem', co
+         +lor: 'var(--muted)', marginBottom: '0.4rem', fontWeight: '600',
+         + textTransform: 'uppercase', letterSpacing: '0.06em' };        
+      50 +  const linkBtn    = { background: 'none', border: 'none', colo
+         +r: 'var(--muted)', fontSize: '0.9rem', padding: '0.75rem', minH
+         +eight: '44px', cursor: 'pointer', textDecoration: 'underline' }
+         +;                                                              
+      51 +  const showPicker = users?.length > 0 && !creating;           
+      52 +                                                               
+      53    return (
+      54      <div style={{ minHeight: '100vh', display: 'flex', alignIte
+          ms: 'center', justifyContent: 'center', background: 'var(--bg)'
+          , padding: '1rem' }}>
+      55        <div style={{ width: '100%', maxWidth: '400px' }}>
+     ...
+       61          </div>
+       62  
+       63          <div style={{ background: 'var(--surface)', border: '1
+           px solid var(--border)', borderRadius: '14px', overflow: 'hidd
+           en' }}>
+       69 -          <div style={{ display: 'flex', borderBottom: '1px so
+          -lid var(--border)' }}>                                        
+       70 -            {tabBtn('login', 'Log in')}                       
+       71 -            {tabBtn('register', 'Register')}                  
+       72 -          </div>                                              
+       73 -                                                              
+       74 -          <form onSubmit={handleSubmit} style={{ padding: '1.5
+          -rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}
+          ->                                                             
+       75 -                                                              
+       76 -            {tab === 'register' && (                          
+       77 -              <>                                              
+       78 -                <div>                                         
+       79 -                  <label style={{ display: 'block', fontSize: 
+          -'0.8rem', color: 'var(--muted)', marginBottom: '0.4rem', fontW
+          -eight: '600', textTransform: 'uppercase', letterSpacing: '0.06
+          -em' }}>Your name</label>                                      
+       80 -                  <input value={name} onChange={e => setName(e
+          -.target.value)} placeholder="e.g. Alex" style={field} required
+          - />                                                           
+       81 -                </div>                                        
+       82 -                                                              
+       83 -                <div>                                         
+       84 -                  <label style={{ display: 'block', fontSize: 
+          -'0.8rem', color: 'var(--muted)', marginBottom: '0.5rem', fontW
+          -eight: '600', textTransform: 'uppercase', letterSpacing: '0.06
+          -em' }}>Choose a glyph</label>                                 
+       85 -                  <GlyphPicker value={glyph} onChange={setGlyp
+          -h} />                                                         
+       86 -                </div>                                        
+       87 -              </>                                             
+       88 -            )}                                                
+       89 -                                                              
+       90 -            <div>                                             
+       91 -              <label style={{ display: 'block', fontSize: '0.8
+          -rem', color: 'var(--muted)', marginBottom: '0.4rem', fontWeigh
+          -t: '600', textTransform: 'uppercase', letterSpacing: '0.06em' 
+          -}}>Username</label>                                           
+       92 -              <input value={username} onChange={e => setUserna
+          -me(e.target.value)} placeholder="e.g. alex" autoCapitalize="of
+          -f" autoComplete="username" style={field} required />          
+       64 +          {users === null ? (                                 
+       65 +            <p style={{ padding: '1.5rem', margin: 0, color: '
+          +var(--muted)' }}>Loading…</p>                                 
+       66 +          ) : showPicker ? (                                  
+       67 +            <div style={{ padding: '1.5rem', display: 'flex', 
+          +flexDirection: 'column', gap: '0.6rem' }}>                    
+       68 +              <span style={labelStyle}>Which profile is yours?
+          +</span>                                                       
+       69 +              {users.map(u => (                               
+       70 +                <button key={u.id} disabled={busy} onClick={()
+          + => attempt(async () => setUser(await api.selectUser(u.id)))} 
+       71 +                  style={{ display: 'flex', alignItems: 'cente
+          +r', gap: '0.75rem', padding: '0.85rem', minHeight: '52px', bor
+          +der: '1px solid var(--border)', borderRadius: '10px', backgrou
+          +nd: 'var(--surface2)', color: 'var(--text)', fontSize: '0.95re
+          +m', cursor: 'pointer', textAlign: 'left' }}>                  
+       72 +                  <span style={{ fontSize: '1.3rem' }}>{u.glyp
+          +h}</span>                                                     
+       73 +                  <span style={{ fontWeight: '600' }}>{u.name}
+          +</span>                                                       
+       74 +                  <span style={{ color: 'var(--dim)', fontSize
+          +: '0.82rem' }}>@{u.username}</span>                           
+       75 +                </button>                                     
+       76 +              ))}                                             
+       77 +              <button type="button" onClick={() => setCreating
+          +(true)} style={linkBtn}>Create a new profile instead</button> 
+       78              </div>
+       79 +          ) : (                                               
+       80 +            <form onSubmit={handleCreate} style={{ padding: '1
+          +.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' 
+          +}}>                                                           
+       81 +              <div>                                           
+       82 +                <label style={labelStyle}>Your name</label>   
+       83 +                <input value={name} onChange={e => setName(e.t
+          +arget.value)} placeholder="e.g. Alex" style={field} required /
+          +>                                                             
+       84 +              </div>                                          
+       85  
+       95 -            <div>                                             
+       96 -              <label style={{ display: 'block', fontSize: '0.8
+          -rem', color: 'var(--muted)', marginBottom: '0.4rem', fontWeigh
+          -t: '600', textTransform: 'uppercase', letterSpacing: '0.06em' 
+          -}}>Password</label>                                           
+       97 -              <input type="password" value={password} onChange
+          -={e => setPassword(e.target.value)} autoComplete={tab === 'log
+          -in' ? 'current-password' : 'new-password'} style={field} requi
+          -red />                                                        
+       98 -            </div>                                            
+       99 -                                                              
+      100 -            {tab === 'register' && (                          
+       86                <div>
+      102 -                <label style={{ display: 'block', fontSize: '0
+          -.8rem', color: 'var(--muted)', marginBottom: '0.4rem', fontWei
+          -ght: '600', textTransform: 'uppercase', letterSpacing: '0.06em
+          -' }}>Confirm password</label>                                 
+      103 -                <input type="password" value={confirm} onChang
+          -e={e => setConfirm(e.target.value)} autoComplete="new-password
+          -" style={field} required />                                   
+       87 +                <label style={{ ...labelStyle, marginBottom: '
+          +0.5rem' }}>Choose a glyph</label>                             
+       88 +                <GlyphPicker value={glyph} onChange={setGlyph}
+          + />                                                           
+       89                </div>
+      105 -            )}                                                
+       90  
+      107 -            {error && (                                       
+      108 -              <p style={{ margin: 0, fontSize: '0.875rem', col
+          -or: 'var(--danger)', background: '#2a1010', border: '1px solid
+          - #4a1a1a', borderRadius: '6px', padding: '0.5rem 0.75rem' }}>{
+          -error}</p>                                                    
+      109 -            )}                                                
+       91 +              <button type="submit" disabled={busy} style={{  
+       92 +                padding: '0.95rem', minHeight: '48px',        
+       93 +                background: 'var(--btn)', color: 'var(--btn-te
+          +xt)',                                                         
+       94 +                border: 'none', borderRadius: '8px', fontWeigh
+          +t: '700', fontSize: '1rem',                                   
+       95 +                cursor: busy ? 'default' : 'pointer', opacity:
+          + busy ? 0.6 : 1, marginTop: '0.25rem',                        
+       96 +              }}>                                             
+       97 +                {busy ? '…' : 'Get started'}                  
+       98 +              </button>                                       
+       99 +            </form>                                           
+      100 +          )}                                                  
+      101  
+      111 -            <button type="submit" disabled={busy} style={{    
+      112 -              padding: '0.95rem', minHeight: '48px',          
+      113 -              background: 'var(--btn)', color: 'var(--btn-text
+          -)',                                                           
+      114 -              border: 'none', borderRadius: '8px', fontWeight:
+          - '700', fontSize: '1rem',                                     
+      115 -              cursor: busy ? 'default' : 'pointer', opacity: b
+          -usy ? 0.6 : 1, marginTop: '0.25rem',                          
+      116 -            }}>                                               
+      117 -              {busy ? '…' : tab === 'login' ? 'Log in' : 'Crea
+          -te account'}                                                  
+      118 -            </button>                                         
+      119 -          </form>                                             
+      102 +          {error && (                                         
+      103 +            <p style={{ margin: '0 1.5rem 1rem', fontSize: '0.
+          +875rem', color: 'var(--danger)', background: '#2a1010', border
+          +: '1px solid #4a1a1a', borderRadius: '6px', padding: '0.5rem 0
+          +.75rem' }}>{error}</p>                                        
+      104 +          )}                                                  
+      105          </div>
+      106 +                                                              
+      107 +        <div style={{ textAlign: 'center', marginTop: '0.75rem
+          +' }}>                                                         
+      108 +          <button type="button" onClick={handleRestore} disabl
+          +ed={busy} style={linkBtn}>Restore from a backup file</button> 
+      109 +        </div>                                                
+      110 +        <p style={{ textAlign: 'center', margin: '0.25rem 0 0'
+          +, fontSize: '0.8rem', color: 'var(--dim)', lineHeight: 1.5 }}>
+      111 +          Your data is stored only on this device.            
+      112 +        </p>                                                  
+      113        </div>
+      114      </div>
+      115    );
+
+⏺ Welcome screen done (create profile / restore backup / pick profile from an
+  imported server DB). Now simplifying Profile and the App shell.
+
+⏺ Bash(python3 - <<'EOF'
+      p='pages/ProfilePage.jsx'…)
+  ⎿  pages/ProfilePage.jsx:12:  const { user, setUser } = useAuth();
+     pages/ProfilePage.jsx:31:      const updated = await api.updateProfile
+     (body);
+     pages/ProfilePage.jsx:32:      setUser(updated);
+  ⎿  Updated client/src/App.jsx (+21 -11)
+      1  import { useState, useEffect, useRef } from 'react';
+      2 -import { Routes, Route, NavLink, useNavigate } from 'react-route
+        -r-dom';                                                         
+      2 +import { Routes, Route, NavLink } from 'react-router-dom';      
+      3  import TodayPage      from './pages/TodayPage.jsx';
+      4  import PlansPage      from './pages/PlansPage.jsx';
+      5  import PlanDetailPage from './pages/PlanDetailPage.jsx';
+     ...
+       9  import { StatsPage }  from './pages/StatsPage.jsx';
+      10  import { UnitContext, useUnitProvider } from './units.js';
+      11  import { AuthProvider, useAuth } from './auth.jsx';
+      12 -import { api } from './api/index.js';                          
+      12 +import { useAppUpdate, applyUpdate } from './pwa.js';          
+      13  import { BarbellLogo } from './ui.jsx';
+      14  
+      15  // ── Nav link style ──────────────────────────────────────────
+          ──────────────────
+     ...
+      31  
+      32  function AppShell() {
+      33    const unitCtx           = useUnitProvider();
+      34 -  const { user, setUser } = useAuth();                         
+      35 -  const navigate          = useNavigate();                     
+      34 +  const { user, error }   = useAuth();                         
+      35 +  const update            = useAppUpdate();                    
+      36    const [menuOpen, setMenuOpen] = useState(false);
+      37    const menuRef = useRef(null);
+      38  
+     ...
+      43      return () => document.removeEventListener('mousedown', clos
+          e);
+      44    }, [menuOpen]);
+      45  
+      46 +  if (error) return (                                          
+      47 +    <div style={{ minHeight: '100vh', display: 'flex', alignIte
+         +ms: 'center', justifyContent: 'center', background: 'var(--bg)'
+         +, padding: '1rem' }}>                                          
+      48 +      <div style={{ maxWidth: '420px', textAlign: 'center' }}> 
+      49 +        <p style={{ color: 'var(--danger)', fontWeight: '600' }
+         +}>Couldn't open the on-device database.</p>                    
+      50 +        <p style={{ color: 'var(--muted)', fontSize: '0.875rem'
+         +, lineHeight: 1.5 }}>{error.message}</p>                       
+      51 +        <p style={{ color: 'var(--dim)', fontSize: '0.8rem', li
+         +neHeight: 1.5 }}>Private-browsing modes can block storage. Your
+         + existing data has not been changed.</p>                       
+      52 +      </div>                                                   
+      53 +    </div>                                                     
+      54 +  );                                                           
+      55 +                                                               
+      56    if (user === undefined) return (
+      57      <div style={{ minHeight: '100vh', display: 'flex', alignIte
+          ms: 'center', justifyContent: 'center', background: 'var(--bg)'
+           }}>
+      58        <p style={{ color: 'var(--muted)' }}>Loading…</p>
+     … 31 more lines (ctrl+o to expand)
+  ⎿  Updated client/src/pages/ProfilePage.jsx (+2 -33)
+      12    const { user, setUser } = useAuth();
+      13    const [name,      setName]      = useState(user?.name  ?? '')
+          ;
+      14    const [glyph,     setGlyph]     = useState(user?.glyph ?? '🏋️
+          ');
+      15 -  const [curPw,     setCurPw]     = useState('');              
+      16 -  const [newPw,     setNewPw]     = useState('');              
+      17 -  const [confirmPw, setConfirmPw] = useState('');              
+      15    const [saving,    setSaving]    = useState(false);
+      16    const [error,     setError]     = useState('');
+      17    const [success,   setSuccess]   = useState('');
+     ...
+      19    async function handleSave(e) {
+      20      e.preventDefault();
+      21      setError(''); setSuccess('');
+      25 -    if (newPw && newPw !== confirmPw) { setError('New passwords
+         - do not match'); return; }                                     
+      26 -    if (newPw && newPw.length < 8)   { setError('New password m
+         -ust be at least 8 characters'); return; }                      
+      22  
+      23      const body = {};
+      24      if (name.trim() !== user.name) body.name  = name.trim();
+      25      if (glyph !== user.glyph)      body.glyph = glyph;
+      31 -    if (newPw) { body.current_password = curPw; body.new_passwo
+         -rd = newPw; }                                                  
+      26  
+      27      if (!Object.keys(body).length) { setSuccess('Nothing to upd
+          ate.'); return; }
+      28  
+     ...
+      31        const updated = await api.updateProfile(body);
+      32        setUser(updated);
+      33        setSuccess('Profile updated.');
+      40 -      setCurPw(''); setNewPw(''); setConfirmPw('');            
+      34      } catch (err) {
+      42 -      const msg = err.message ?? '';                           
+      43 -      setError(msg.includes('401') ? 'Incorrect current passwor
+         -d'                                                             
+      44 -             : msg.includes('400') ? 'Please check your inputs'
+      45 -             : 'Something went wrong — try again');            
+      35 +      setError(err.message || 'Something went wrong — try again
+         +');                                                            
+      36      } finally {
+      37        setSaving(false);
+      38      }
+     ...
+      40  
+      41    return (
+      42      <div>
+      53 -      <h2 style={{ marginTop: 0, color: 'var(--text)' }}>Profil
+         -e</h2>                                                         
+      54 -      <p style={{ margin: '0 0 1.5rem', fontSize: '0.85rem', co
+         -lor: 'var(--dim)' }}>                                          
+     … 30 more lines (ctrl+o to expand)
+
+⏺ Now the PWA build pieces: Vite config, service-worker generator, manifest,
+  icons.
+
+⏺ Bash(mkdir -p /Users/philb/localhost/fitnesstrack/client/public && cat >
+      /Users/philb/localhost/fitnesstrack/client/vite.config.js <<'EOF'
+      import { defineConfig } fr…)
+  ⎿  Created client/src/sw.js (+38 -0)
+       1 +// Service worker template — vite-plugin-sw.js fills in the ver
+         +sion and the                                                   
+       2 +// precache list at build time. Not bundled with the app.      
+       3 +const VERSION = '__SW_VERSION__';                              
+       4 +const ASSETS  = __SW_ASSETS__;                                 
+       5 +const CACHE   = `fitnesstrack-${VERSION}`;                     
+       6 +                                                               
+       7 +self.addEventListener('install', event => {                    
+       8 +  event.waitUntil(caches.open(CACHE).then(cache => cache.addAll
+         +(ASSETS)));                                                    
+       9 +});                                                            
+      10 +                                                               
+      11 +self.addEventListener('activate', event => {                   
+      12 +  event.waitUntil(                                             
+      13 +    caches.keys()                                              
+      14 +      .then(keys => Promise.all(keys                           
+      15 +        .filter(k => k.startsWith('fitnesstrack-') && k !== CAC
+         +HE)                                                            
+      16 +        .map(k => caches.delete(k))))                          
+      17 +      .then(() => self.clients.claim())                        
+      18 +  );                                                           
+      19 +});                                                            
+      20 +                                                               
+      21 +// The page asks a waiting worker to take over when the user ac
+         +cepts an update.                                               
+      22 +self.addEventListener('message', event => {                    
+      23 +  if (event.data === 'SKIP_WAITING') self.skipWaiting();       
+      24 +});                                                            
+      25 +                                                               
+      26 +// Cache-first for everything we precached; the app shell for a
+         +ny navigation                                                  
+      27 +// (routing is hash-based, so every page is index.html).       
+      28 +self.addEventListener('fetch', event => {                      
+      29 +  const { request } = event;                                   
+      30 +  if (request.method !== 'GET' || new URL(request.url).origin !
+         +== self.location.origin) return;                               
+      31 +  if (request.mode === 'navigate') {                           
+      32 +    event.respondWith(                                         
+      33 +      caches.match(new URL('./', self.registration.scope).href)
+         +.then(r => r || fetch(request))                                
+      34 +    );                                                         
+      35 +    return;                                                    
+      36 +  }                                                            
+      37 +  event.respondWith(caches.match(request, { ignoreSearch: true 
+         +}).then(r => r || fetch(request)));                            
+      38 +});                                                            
+  ⎿  Created client/vite-plugin-sw.js (+36 -0)
+       1 +// Generates dist/sw.js after a production build: the service w
+         +orker template                                                 
+       2 +// (src/sw.js) with the full list of emitted files to precache 
+         +and a version                                                  
+       3 +// derived from their contents, so every deploy that changes an
+         +ything installs                                                
+       4 +// as a new worker and the app updates on next launch.         
+       5 +import { readFileSync, writeFileSync, readdirSync, statSync } f
+         +rom 'fs';                                                      
+       6 +import { join, relative, sep } from 'path';                    
+       7 +import { createHash } from 'crypto';                           
+       8 +                                                               
+       9 +function walk(dir) {                                           
+      10 +  return readdirSync(dir).flatMap(name => {                    
+      11 +    const p = join(dir, name);                                 
+      12 +    return statSync(p).isDirectory() ? walk(p) : [p];          
+      13 +  });                                                          
+      14 +}                                                              
+      15 +                                                               
+      16 +export function serviceWorker() {                              
+      17 +  let outDir;                                                  
+      18 +  return {                                                     
+      19 +    name: 'fitnesstrack-sw',                                   
+      20 +    apply: 'build',                                            
+      21 +    configResolved(config) { outDir = join(config.root, config.
+         +build.outDir); },                                              
+      22 +    closeBundle() {                                            
+      23 +      const files = walk(outDir)                               
+      24 +        .map(p => relative(outDir, p).split(sep).join('/'))    
+      25 +        .filter(f => f !== 'sw.js' && !f.endsWith('.map'))     
+      26 +        .sort();                                               
+      27 +      const hash = createHash('sha256');                       
+      28 +      for (const f of files) hash.update(f).update(readFileSync
+         +(join(outDir, f)));                                            
+      29 +      const template = readFileSync(new URL('./src/sw.js', impo
+         +rt.meta.url), 'utf8');                                         
+      30 +      const sw = template                                      
+      31 +        .replace('__SW_VERSION__', hash.digest('hex').slice(0, 
+         +12))                                                           
+      32 +        .replace('__SW_ASSETS__', JSON.stringify(['./', ...file
+         +s], null, 2));                                                 
+      33 +      writeFileSync(join(outDir, 'sw.js'), sw);                
+      34 +    },                                                         
+      35 +  };                                                           
+      36 +}                                                              
+  ⎿  Updated client/vite.config.js (+13 -4)
+       1  import { defineConfig } from 'vite';
+       2  import react from '@vitejs/plugin-react';
+       3 +import { readFileSync } from 'fs';                             
+       4 +import { serviceWorker } from './vite-plugin-sw.js';           
+       5 +                                                               
+       6 +const { version } = JSON.parse(readFileSync(new URL('../package
+         +.json', import.meta.url), 'utf8'));                            
+       7  
+       8  export default defineConfig({
+       5 -  plugins: [react()],                                          
+       9 +  // Relative asset URLs: the build is a static bundle that wor
+         +ks from any                                                    
+      10 +  // path — a domain root, a GitHub Pages /<repo>/ subpath, or 
+         +a local folder.                                                
+      11 +  base: './',                                                  
+      12 +  plugins: [react(), serviceWorker()],                         
+      13 +  define: {                                                    
+      14 +    __APP_VERSION__: JSON.stringify(version),                  
+      15 +  },                                                           
+      16    server: {
+       7 -    proxy: {                                                   
+       8 -      '/api': 'http://localhost:3001',                         
+       9 -    },                                                         
+      17 +    // shared/ (progression algorithm) lives one level above th
+         +e client root.                                                 
+      18 +    fs: { allow: ['..'] },                                     
+      19    },
+      20  });
+
+⏺ Bash(cd /Users/philb/localhost/fitnesstrack/client && mv src/sw.js
+      sw-template.js && sed -i '' "s#new URL('./src/sw.js', import.meta.url)#new
+      URL('./sw-template.js',…)  ⎿  // Generates dist/sw.js after a production build: the service worker t
+     emplate
+     // (sw-template.js) with the full list of emitted files to precache an
+     … +13 lines (ctrl+o to expand)
+  ⎿  Deleted client/src/sw.js (+0 -38)
+       1 -// Service worker template — vite-plugin-sw.js fills in the ver
+         -sion and the                                                   
+       2 -// precache list at build time. Not bundled with the app.      
+       3 -const VERSION = '__SW_VERSION__';                              
+       4 -const ASSETS  = __SW_ASSETS__;                                 
+       5 -const CACHE   = `fitnesstrack-${VERSION}`;                     
+       6 -                                                               
+       7 -self.addEventListener('install', event => {                    
+       8 -  event.waitUntil(caches.open(CACHE).then(cache => cache.addAll
+         -(ASSETS)));                                                    
+       9 -});                                                            
+      10 -                                                               
+      11 -self.addEventListener('activate', event => {                   
+      12 -  event.waitUntil(                                             
+      13 -    caches.keys()                                              
+      14 -      .then(keys => Promise.all(keys                           
+      15 -        .filter(k => k.startsWith('fitnesstrack-') && k !== CAC
+         -HE)                                                            
+      16 -        .map(k => caches.delete(k))))                          
+      17 -      .then(() => self.clients.claim())                        
+      18 -  );                                                           
+      19 -});                                                            
+      20 -                                                               
+      21 -// The page asks a waiting worker to take over when the user ac
+         -cepts an update.                                               
+      22 -self.addEventListener('message', event => {                    
+      23 -  if (event.data === 'SKIP_WAITING') self.skipWaiting();       
+      24 -});                                                            
+      25 -                                                               
+      26 -// Cache-first for everything we precached; the app shell for a
+         -ny navigation                                                  
+      27 -// (routing is hash-based, so every page is index.html).       
+      28 -self.addEventListener('fetch', event => {                      
+      29 -  const { request } = event;                                   
+      30 -  if (request.method !== 'GET' || new URL(request.url).origin !
+         -== self.location.origin) return;                               
+      31 -  if (request.mode === 'navigate') {                           
+      32 -    event.respondWith(                                         
+      33 -      caches.match(new URL('./', self.registration.scope).href)
+         -.then(r => r || fetch(request))                                
+      34 -    );                                                         
+      35 -    return;                                                    
+      36 -  }                                                            
+      37 -  event.respondWith(caches.match(request, { ignoreSearch: true 
+         -}).then(r => r || fetch(request)));                            
+      38 -});                                                            
+  ⎿  Created client/sw-template.js (+38 -0)
+       1 +// Service worker template — vite-plugin-sw.js fills in the ver
+         +sion and the                                                   
+       2 +// precache list at build time. Not bundled with the app.      
+       3 +const VERSION = '__SW_VERSION__';                              
+       4 +const ASSETS  = __SW_ASSETS__;                                 
+       5 +const CACHE   = `fitnesstrack-${VERSION}`;                     
+       6 +                                                               
+       7 +self.addEventListener('install', event => {                    
+       8 +  event.waitUntil(caches.open(CACHE).then(cache => cache.addAll
+         +(ASSETS)));                                                    
+       9 +});                                                            
+      10 +                                                               
+      11 +self.addEventListener('activate', event => {                   
+      12 +  event.waitUntil(                                             
+      13 +    caches.keys()                                              
+      14 +      .then(keys => Promise.all(keys                           
+      15 +        .filter(k => k.startsWith('fitnesstrack-') && k !== CAC
+         +HE)                                                            
+      16 +        .map(k => caches.delete(k))))                          
+      17 +      .then(() => self.clients.claim())                        
+      18 +  );                                                           
+      19 +});                                                            
+      20 +                                                               
+      21 +// The page asks a waiting worker to take over when the user ac
+         +cepts an update.                                               
+      22 +self.addEventListener('message', event => {                    
+      23 +  if (event.data === 'SKIP_WAITING') self.skipWaiting();       
+      24 +});                                                            
+      25 +                                                               
+      26 +// Cache-first for everything we precached; the app shell for a
+         +ny navigation                                                  
+      27 +// (routing is hash-based, so every page is index.html).       
+      28 +self.addEventListener('fetch', event => {                      
+      29 +  const { request } = event;                                   
+      30 +  if (request.method !== 'GET' || new URL(request.url).origin !
+         +== self.location.origin) return;                               
+      31 +  if (request.mode === 'navigate') {                           
+      32 +    event.respondWith(                                         
+      33 +      caches.match(new URL('./', self.registration.scope).href)
+         +.then(r => r || fetch(request))                                
+      34 +    );                                                         
+      35 +    return;                                                    
+      36 +  }                                                            
+      37 +  event.respondWith(caches.match(request, { ignoreSearch: true 
+         +}).then(r => r || fetch(request)));                            
+      38 +});                                                            
+  ⎿  Updated client/vite-plugin-sw.js (+2 -2)
+      1  // Generates dist/sw.js after a production build: the service wo
+         rker template
+      2 -// (src/sw.js) with the full list of emitted files to precache a
+        -nd a version                                                    
+      2 +// (sw-template.js) with the full list of emitted files to preca
+        +che and a version                                               
+      3  // derived from their contents, so every deploy that changes any
+         thing installs
+      4  // as a new worker and the app updates on next launch.
+      5  import { readFileSync, writeFileSync, readdirSync, statSync } fr
+         om 'fs';
+     ...
+      26          .sort();
+      27        const hash = createHash('sha256');
+      28        for (const f of files) hash.update(f).update(readFileSync
+          (join(outDir, f)));
+      29 -      const template = readFileSync(new URL('./src/sw.js', impo
+         -rt.meta.url), 'utf8');                                         
+      29 +      const template = readFileSync(new URL('./sw-template.js',
+         + import.meta.url), 'utf8');                                    
+      30        const sw = template
+      31          .replace('__SW_VERSION__', hash.digest('hex').slice(0, 
+          12))
+      32          .replace('__SW_ASSETS__', JSON.stringify(['./', ...file
+          s], null, 2));
+
+⏺ Bash(mkdir -p /Users/philb/localhost/fitnesstrack/client/scripts && cat >
+      /Users/philb/localhost/fitnesstrack/client/scripts/make-icons.mjs <<'EOF'
+      // Renders the ba…)
+  ⎿  icons written to public/
+     total 32
+     drwxr-xr-x   6 philb  staff   192 Oct 18 17:45 .
+     … +5 lines (ctrl+o to expand)
+  ⎿  Created client/scripts/make-icons.mjs (+71 -0)
+       1 +// Renders the barbell logo (same geometry as BarbellLogo in sr
+         +c/ui.jsx) into                                                 
+       2 +// the PNG app icons in public/. Dependency-free: rasterizes th
+         +e rounded                                                      
+       3 +// rectangles with 4×4 supersampling and writes PNGs with zlib.
+       4 +//   node scripts/make-icons.mjs                               
+       5 +import { writeFileSync } from 'fs';                            
+       6 +import { deflateSync } from 'zlib';                            
+       7 +                                                               
+       8 +const BG = [0x0f, 0x0f, 0x0f];                                 
+       9 +const FG = [0xf0, 0xa0, 0x30];                                 
+      10 +// [x, y, w, h, rx] in the logo's 24×24 viewBox                
+      11 +const RECTS = [[1, 7, 3, 10, 1.5], [4, 9.5, 2, 5, 0.75], [6, 11
+         +, 12, 2, 1], [18, 9.5, 2, 5, 0.75], [20, 7, 3, 10, 1.5]];      
+      12 +                                                               
+      13 +function inRoundRect(px, py, [x, y, w, h, r]) {                
+      14 +  if (px < x || px > x + w || py < y || py > y + h) return fals
+         +e;                                                             
+      15 +  const cx = Math.min(Math.max(px, x + r), x + w - r);         
+      16 +  const cy = Math.min(Math.max(py, y + r), y + h - r);         
+      17 +  return (px - cx) ** 2 + (py - cy) ** 2 <= r * r;             
+      18 +}                                                              
+      19 +                                                               
+      20 +// `scale` = fraction of the icon the 24-unit logo box occupies
+         +.                                                              
+      21 +function render(size, scale) {                                 
+      22 +  const S = 4, unit = (size * scale) / 24, off = (size - size *
+         + scale) / 2;                                                   
+      23 +  const rows = [];                                             
+      24 +  for (let y = 0; y < size; y++) {                             
+      25 +    const row = Buffer.alloc(1 + size * 3);                    
+      26 +    for (let x = 0; x < size; x++) {                           
+      27 +      let hit = 0;                                             
+      28 +      for (let sy = 0; sy < S; sy++) for (let sx = 0; sx < S; s
+         +x++) {                                                         
+      29 +        const lx = (x + (sx + 0.5) / S - off) / unit, ly = (y +
+         + (sy + 0.5) / S - off) / unit;                                 
+      30 +        if (RECTS.some(r => inRoundRect(lx, ly, r))) hit++;    
+      31 +      }                                                        
+      32 +      const a = hit / (S * S);                                 
+      33 +      for (let c = 0; c < 3; c++) row[1 + x * 3 + c] = Math.rou
+         +nd(BG[c] + (FG[c] - BG[c]) * a);                               
+      34 +    }                                                          
+      35 +    rows.push(row);                                            
+      36 +  }                                                            
+      37 +  return png(size, size, Buffer.concat(rows));                 
+      38 +}                                                              
+      39 +                                                               
+      40 +const CRC = Array.from({ length: 256 }, (_, n) => {            
+     … 31 more lines (ctrl+o to expand)
+  ⎿  … 4 more files changed
+
+  Read 1 file (ctrl+o to expand)
+
+⏺ Icon renders correctly. Now manifest, favicon and index.html.
+
+⏺ Bash(cat > public/manifest.webmanifest <<'EOF'
+      {…)
+  ⎿  8:    <meta name="description" content="Progressive overload workout t
+     racker — works offline, data stays on your device." />
+     9:    <link rel="manifest" href="./manifest.webmanifest" />
+     62:    <script type="module" src="./src/main.jsx"></script>
+  ⎿  Updated client/index.html (+12 -1)
+       4      <meta charset="UTF-8" />
+       5      <meta name="viewport" content="width=device-width, initial-
+          scale=1.0" />
+       6      <title>FitnessTrack</title>
+       7 +    <meta name="theme-color" content="#181818" />              
+       8 +    <meta name="description" content="Progressive overload work
+         +out tracker — works offline, data stays on your device." />    
+       9 +    <link rel="manifest" href="./manifest.webmanifest" />      
+      10 +    <link rel="icon" type="image/svg+xml" href="./favicon.svg" 
+         +/>                                                             
+      11 +    <link rel="apple-touch-icon" href="./apple-touch-icon.png" 
+         +/>                                                             
+      12 +    <meta name="mobile-web-app-capable" content="yes" />       
+      13 +    <meta name="apple-mobile-web-app-capable" content="yes" /> 
+      14 +    <meta name="apple-mobile-web-app-title" content="FitnessTra
+         +ck" />                                                         
+      15 +    <meta name="apple-mobile-web-app-status-bar-style" content=
+         +"black" />                                                     
+      16      <style>
+      17        :root {
+      18          --bg:        #0f0f0f;
+     ...
+      42        }
+      43        *, *::before, *::after { box-sizing: border-box; }
+      44        body { margin: 0; font-family: system-ui, sans-serif; bac
+          kground: var(--bg); color: var(--text); }
+      45 +      /* Installed app: no rubber-band pull-to-refresh, no grey
+         + tap flash. */                                                 
+      46 +      html, body { overscroll-behavior-y: none; -webkit-tap-hig
+         +hlight-color: transparent; }                                   
+      47        button { cursor: pointer; }
+      48        select, input, option { color-scheme: dark; }
+      49        /* Hide native number-input spinners — they clash with th
+          e per-set
+     ...
+      59    </head>
+      60    <body>
+      61      <div id="root"></div>
+      51 -    <script type="module" src="/src/main.jsx"></script>        
+      62 +    <script type="module" src="./src/main.jsx"></script>       
+      63    </body>
+      64  </html>
+  ⎿  Created client/public/favicon.svg (+7 -0)
+      1 +<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmln
+        +s="http://www.w3.org/2000/svg">                                 
+      2 +  <rect x="1"  y="7"   width="3"  height="10" rx="1.5" fill="#f0
+        +a030"/>                                                         
+      3 +  <rect x="4"  y="9.5" width="2"  height="5"  rx="0.75" fill="#f
+        +0a030"/>                                                        
+      4 +  <rect x="6"  y="11"  width="12" height="2"  rx="1"   fill="#f0
+        +a030"/>                                                         
+      5 +  <rect x="18" y="9.5" width="2"  height="5"  rx="0.75" fill="#f
+        +0a030"/>                                                        
+      6 +  <rect x="20" y="7"   width="3"  height="10" rx="1.5" fill="#f0
+        +a030"/>                                                         
+      7 +</svg>                                                          
+  ⎿  Created client/public/manifest.webmanifest (+16 -0)
+       1 +{                                                              
+       2 +  "name": "FitnessTrack",                                      
+       3 +  "short_name": "FitnessTrack",                                
+       4 +  "description": "Progressive overload workout tracker — works 
+         +offline, data stays on your device.",                          
+       5 +  "start_url": "./",                                           
+       6 +  "scope": "./",                                               
+       7 +  "display": "standalone",                                     
+       8 +  "orientation": "portrait",                                   
+       9 +  "background_color": "#0f0f0f",                               
+      10 +  "theme_color": "#181818",                                    
+      11 +  "icons": [                                                   
+      12 +    { "src": "icon-192.png", "sizes": "192x192", "type": "image
+         +/png", "purpose": "any" },                                     
+      13 +    { "src": "icon-512.png", "sizes": "512x512", "type": "image
+         +/png", "purpose": "any" },                                     
+      14 +    { "src": "icon-maskable-512.png", "sizes": "512x512", "type
+         +": "image/png", "purpose": "maskable" }                        
+      15 +  ]                                                            
+      16 +}                                                              
+
+⏺ Now the root package.json (no more server deps) and a first build.
+
+⏺ Bash(cd /Users/philb/localhost/fitnesstrack && cat > package.json <<'EOF'
+      {…)
+  ⎿  ==> shared/algorithm.test.js <==
+     // Algorithm test suite — run with: node shared/algorithm.test.js
+     // Tests nextExerciseTargets, weightAdjustedTarget, and setPerformance
+     … +32 lines (ctrl+o to expand)
+  ⎿  Updated package.json (+10 -14)
+       1  {
+       2    "name": "fitnesstrack",
+       3 -  "version": "1.7.5",                                          
+       3 +  "version": "2.0.0",                                          
+       4    "type": "module",
+       5 +  "private": true,                                             
+       6 +  "engines": {                                                 
+       7 +    "node": ">=20.19"                                          
+       8 +  },                                                           
+       9    "scripts": {
+       6 -    "dev": "node server/index.js",                             
+       7 -    "start": "node server/index.js",                           
+       8 -    "setup": "node server/db.js && node server/seed.js",       
+      10 +    "install:all": "cd client && npm install",                 
+      11 +    "dev": "cd client && npm run dev",                         
+      12      "build": "cd client && npm run build",
+      10 -    "install:all": "npm install && cd client && npm install",  
+      11 -    "update": "bash scripts/update.sh"                         
+      12 -  },                                                           
+      13 -  "dependencies": {                                            
+      14 -    "bcryptjs": "^3.0.3",                                      
+      15 -    "better-sqlite3": "^12.9.0",                               
+      16 -    "cookie-parser": "^1.4.7",                                 
+      17 -    "express": "^4.21.0",                                      
+      18 -    "express-rate-limit": "^7.5.0",                            
+      19 -    "jsonwebtoken": "^9.0.3"                                   
+      13 +    "preview": "cd client && npm run preview",                 
+      14 +    "icons": "cd client && node scripts/make-icons.mjs",       
+      15 +    "test": "node shared/algorithm.test.js && node shared/recap
+         +.test.js && node client/src/backend/statsWeeks.test.js && node 
+         +client/src/progressionHint.test.js && node client/src/backend/b
+         +ackend.test.js"                                                
+      16    }
+      17  }
+  ⎿  … 1 more file changed
+
+⏺ Build succeeds. Checking the generated service worker, then writing an
+  end-to-end backend test that runs in Node against real SQLite (sql.js).
+
+⏺ Bash(head -20 dist/sw.js && ls dist dist/assets && sed -i '' "s#  plugins:
+      \[react(), serviceWorker()\],#  plugins: [react(), serviceWorker()],\n  //
+      One bundle (app…)
+  ⎿  // Service worker template — vite-plugin-sw.js fills in the version an
+     d the
+     // precache list at build time. Not bundled with the app.
+     … +34 lines (ctrl+o to expand)
+  ⎿  Updated client/vite.config.js (+2 -0)
+      10    // path — a domain root, a GitHub Pages /<repo>/ subpath, or 
+          a local folder.
+      11    base: './',
+      12    plugins: [react(), serviceWorker()],
+      13 +  // One bundle (app + SQLite glue) is expected — it's precache
+         +d for offline use.                                             
+      14 +  build: { chunkSizeWarningLimit: 1000 },                      
+      15    define: {
+      16      __APP_VERSION__: JSON.stringify(version),
+      17    },
+
+⏺ Write(client/src/backend/backend.test.js)
+  ⎿  Wrote 171 lines to client/src/backend/backend.test.js
+       1 // End-to-end backend test — run with: node client/src/backend/b
+       2 // Drives the in-browser backend through its request handler aga
+         inst a real
+         so storage.js
+       4 // falls back to memory — persistence is exercised through that 
+       5 import assert from 'node:assert/strict';
+       6 import initSqlJs from 'sql.js';
+         setBackup, restorePreResetBackup } from './app.js';
+       8 import { loadFile } from './storage.js';
+      10 let passed = 0, failed = 0;
+     … +203 lines (ctrl+o to expand)
+
+⏺ Bash(cd /Users/philb/localhost/fitnesstrack && export
+      PATH=~/.nvm/versions/node/v22.12.0/bin:$PATH && node
+      client/src/backend/backend.test.js 2>&1 | tail -40)
+  ⎿    ✓ no profile → /me is null and data routes are 401
+       ✓ register creates the local profile and claims the seeded plans
+       ✓ exercise library is seeded and named-parameter upserts work
+     … +13 lines (ctrl+o to expand)
+
+⏺ All 13 backend tests pass on the first run. Running the full suite, then the
+  real app in a browser.
+
+⏺ Bash(export PATH=~/.nvm/versions/node/v22.12.0/bin:$PATH && sed -i '' 's#run
+      with: node server/statsWeeks.test.js#run with: node
+      client/src/backend/statsWeeks.test.j…)
+  ⎿  All 53 tests passed.
+     All 15 tests passed.
+     All 7 tests passed.
+     … +11 lines (ctrl+o to expand)
+  ⎿  Updated client/src/backend/statsWeeks.test.js (+1 -1)
+      1 -// selectProgressWeeks test suite — run with: node server/statsW
+        -eeks.test.js                                                    
+      1 +// selectProgressWeeks test suite — run with: node client/src/ba
+        +ckend/statsWeeks.test.js                                        
+      2  import { selectProgressWeeks } from './statsWeeks.js';
+      3  
+      4  let passed = 0, failed = 0;
+
+⏺ Bash(mkdir -p /tmp/ft-pw && cd /tmp/ft-pw && export
+      PATH=~/.nvm/versions/node/v22.12.0/bin:$PATH && npm init -y >/dev/null &&
+      npm install playwright-core@1.56.1 2>&1…)
+  ⎿  found 0 vulnerabilities
+     <!DOCTYPE html>
+     <html lang="en">
+     … +4 lines (ctrl+o to expand)
+
+⏺ Bash(cat > /tmp/ft-pw/run.mjs <<'EOF'
+      import { chromium } from 'playwright-core';…)
+  ⎿  Error: Exit code 1
+     node:internal/modules/run_main:122
+         triggerUncaughtException(
+         ^
+
+     locator.waitFor: Error: strict mode violation: getByText('Your equipment') 
+     resolved to 2 elements:
+         1) <h3>Your equipment</h3> aka getByRole('heading', { name: 'Your 
+     equipment' })
+         2) <p>Only exercises matching your equipment will show …</p> aka 
+     getByText('Only exercises matching your')
+
+     Call log:
+     … +5 lines (ctrl+o to expand)
+
+⏺ Bash(cd /tmp/ft-pw && sed -i '' "s#page.getByText('Your
+      equipment').waitFor()#page.getByRole('heading', { name: 'Your equipment'
+      }).waitFor()#" run.mjs && ~/.nvm/ver…)
+  ⎿  hash after plans: #/schedule
+     sw: activated
+     errors: []
+  ⎿  Shell cwd was reset to /Users/philb/localhost/fitnesstrack
+
+  Read 2 files (ctrl+o to expand)
+
+⏺ Navigation and the service worker work. Now testing the core flow: log a set,
+  reload, then go fully offline and relaunch.
+
+⏺ Bash(cat > /tmp/ft-pw/run2.mjs <<'EOF'
+      import { chromium } from 'playwright-core';…)
+  ⎿  inputs on workout page: 21
+     errors: []
+  ⎿  Shell cwd was reset to /Users/philb/localhost/fitnesstrack
+
+  Read 1 file (ctrl+o to expand)
+
+⏺ The workout screen renders fully. Now logging a set through the UI, then
+  checking it survives a reload and an offline relaunch.
+
+  Searched for 2 patterns (ctrl+o to expand)
+
+⏺ Bash(sed -n 525,550p client/src/pages/TodayPage.jsx)
+  ⎿            onFocus={handleFocusSelect} onKeyDown={handleKeyDown}
+               placeholder={outOfBand ? '?' : (targetReps != null ? String(
+     targetReps) : 'reps')} min="1" max="999"
+     … +23 lines (ctrl+o to expand)
+
+⏺ Bash(cat > /tmp/ft-pw/run3.mjs <<'EOF'
+      import { chromium } from 'playwright-core';…)
+  ⎿  loggable ticks: 4
+     logged after clicks: 3
+     logged after reload: 3
+     … +4 lines (ctrl+o to expand)
+  ⎿  Shell cwd was reset to /Users/philb/localhost/fitnesstrack
+
+  Read 1 file (ctrl+o to expand)
+
+⏺ Offline mode works as expected—the app reloads from cache and offline changes
+  persist across reloads. I'll stop the preview server now and write the deploy
+  workflow and docs.
+
+⏺ Bash(pkill -f "vite preview --port 4173"; cd
+      /Users/philb/localhost/fitnesstrack && mkdir -p .github/workflows && ls
+      .github/workflows; cat > .github/workflows/pages…)  ⎿  {
+       "name": "fitnesstrack-client",
+       "version": "2.0.0",
+     … +18 lines (ctrl+o to expand)
+  ⎿  Created .github/workflows/pages.yml (+39 -0)
+       1 +# Builds the PWA and publishes it to GitHub Pages on every push
+         + to master.                                                    
+       2 +# One-time setup: repo Settings → Pages → Source: "GitHub Actio
+         +ns".                                                           
+       3 +name: Deploy to GitHub Pages                                   
+       4 +                                                               
+       5 +on:                                                            
+       6 +  push:                                                        
+       7 +    branches: [master]                                         
+       8 +  workflow_dispatch:                                           
+       9 +                                                               
+      10 +permissions:                                                   
+      11 +  contents: read                                               
+      12 +  pages: write                                                 
+      13 +  id-token: write                                              
+      14 +                                                               
+      15 +concurrency:                                                   
+      16 +  group: pages                                                 
+      17 +  cancel-in-progress: true                                     
+      18 +                                                               
+      19 +jobs:                                                          
+      20 +  deploy:                                                      
+      21 +    runs-on: ubuntu-latest                                     
+      22 +    environment:                                               
+      23 +      name: github-pages                                       
+      24 +      url: ${{ steps.deployment.outputs.page_url }}            
+      25 +    steps:                                                     
+      26 +      - uses: actions/checkout@v4                              
+      27 +      - uses: actions/setup-node@v4                            
+      28 +        with:                                                  
+      29 +          node-version: 22                                     
+      30 +          cache: npm                                           
+      31 +          cache-dependency-path: client/package-lock.json      
+      32 +      - run: npm ci --prefix client                            
+      33 +      - run: npm test                                          
+      34 +      - run: npm run build                                     
+      35 +      - uses: actions/upload-pages-artifact@v3                 
+      36 +        with:                                                  
+      37 +          path: client/dist                                    
+      38 +      - id: deployment                                         
+      39 +        uses: actions/deploy-pages@v4                          
+  ⎿  Updated .gitignore (+0 -2)
+       4  *.db
+       5  *.db-shm
+       6  *.db-wal
+       7 -.env                                                           
+       7  .DS_Store
+       8  Thumbs.db
+      10 -scripts/seed-demo.js                                           
+       9  CLAUDE.md
+  ⎿  Updated client/package.json (+1 -1)
+      1  {
+      2    "name": "fitnesstrack-client",
+      3 -  "version": "1.0.28",                                          
+      3 +  "version": "2.0.0",                                           
+      4    "type": "module",
+      5    "scripts": {
+      6      "dev": "vite",
+
+⏺ Bash(grep -n "^## \|^### \|^- \[" README.md; sed -n 1,12p README.md | cut
+      -c1-200; awk '/^## Tech stack/,/^## Installation/' README.md; awk '/^##
+      First run/,0' READM…)
+  ⎿  15:## Features
+     36:## Contents
+     38:- [How the algorithm works](#how-the-algorithm-works)
+     … +127 lines (ctrl+o to expand)
+
+⏺ Rewriting the README's hosting/install sections for the PWA model (algorithm
+  docs untouched).
+
+⏺ Bash(python3 - <<'EOF'
+      p='README.md'…)
+  ⎿  15:## Features
+     37:## Contents
+     49:## How the algorithm works
+     … +14 lines (ctrl+o to expand)
+  ⎿  1 file changed (binary, mode only or too large to show)
+
+⏺ Now the CHANGELOG entry and updating CLAUDE.md (local-only, but it steers
+  future sessions).
+
+⏺ Bash(python3 - <<'EOF'
+      p='CHANGELOG.md'…)
+  ⎿  3:Progressive overload fitness tracker. **Offline-first PWA with no se
+     rver**: React 18 + Vite, with the "backend" running in the browser aga
+     inst SQLite compiled to WASM (sql.js), persisted to IndexedDB. One loc
+     … +20 lines (ctrl+o to expand)
+  ⎿  Updated CHANGELOG.md (+17 -0)
+       1  # Changelog
+       2  
+       3 +## [2.0.0] - 2026-10-18                                        
+       4 +                                                               
+       5 +### Changed                                                    
+       6 +- **FitnessTrack is now an installable, offline-first PWA — no 
+         +server or Docker container needed.** The whole app, including i
+         +ts SQLite database (via WebAssembly), runs on your phone. Add i
+         +t to your home screen and log workouts with no connection; data
+         + is saved on the device after every change. The progression alg
+         +orithm and all features are unchanged.                         
+       7 +- **No accounts or passwords.** First launch asks for a name an
+         +d avatar; the data lives only on your device.                  
+       8 +- **Updates arrive through the app.** Installed copies pick up 
+         +new deploys in the background and offer a one-tap reload ("Setu
+         +p → App → Check for updates" checks on demand). The server-side
+         + `git pull` updater is gone.                                   
+       9 +                                                               
+      10 +### Added                                                      
+      11 +- **Backup & restore** (Setup → Data): export the database as a
+         + `.db` file via the share sheet / download, and import it on an
+         +y device. Import also accepts the `fitness.db` from the old sel
+         +f-hosted server, so you can bring your history across.         
+      12 +- **Restore pre-reset backup**: "Reset all training data" keeps
+         + the previous database on the device, restorable from Setup → D
+         +ata.                                                           
+      13 +- **GitHub Pages deployment** workflow (`.github/workflows/page
+         +s.yml`) — the build is a static site that works from any static
+         + host.                                                         
+      14 +                                                               
+      15 +### Removed                                                    
+      16 +- The Express server, Dockerfile/docker-compose, systemd unit a
+         +nd platform setup/update scripts.                              
+      17 +                                                               
+      18 +---                                                            
+      19 +                                                               
+      20  ## [1.7.5] - 2026-07-09
+      21  
+      22  ### Changed
+  ⎿  Updated CLAUDE.md (+48 -48)
+       1  # FitnessTrack — Claude context
+       2  
+       3 -Progressive overload fitness tracker. Node.js + Express backend
+         -, SQLite via `better-sqlite3`, React 18 + Vite frontend. Single
+         --user capable, multi-user ready.                               
+       3 +Progressive overload fitness tracker. **Offline-first PWA with 
+         +no server**: React 18 + Vite, with the "backend" running in the
+         + browser against SQLite compiled to WASM (sql.js), persisted to
+         + IndexedDB. One local profile per device (the schema keeps `use
+         +r_id` columns; a DB imported from the old multi-user server can
+         + hold several users).                                          
+       4  
+       5  ## Stack
+       6  
+       7 -- **Backend**: Node.js, Express (port 3001)                    
+       8 -- **Frontend**: React 18, Vite, react-router-dom (dev: port 517
+         -3, proxies `/api` → 3001)                                      
+       9 -- **Database**: SQLite — `fitness.db` in project root (configur
+         -able via `DATABASE_PATH` env)                                  
+      10 -- **Shared logic**: `shared/algorithm.js` — pure functions, no 
+         -DB deps, imported by both server and client                    
+       7 +- **App**: React 18, Vite, react-router-dom **HashRouter** (sta
+         +tic hosting at any path, no SPA fallback). `base: './'`        
+       8 +- **Backend (in-browser)**: `client/src/backend/` — the former 
+         +Express routes, unchanged in shape, run in-process via a tiny E
+         +xpress-style router. `api/index.js` calls `handle(method, path,
+         + body)` instead of `fetch`                                     
+       9 +- **Database**: sql.js (SQLite WASM). `backend/sqlite.js` is a 
+         +**better-sqlite3-compatible facade** (`prepare().get/all/run`, 
+         +`transaction()`, `pragma()`, named `@params` from plain objects
+         +) — write backend code exactly as you would for better-sqlite3.
+         + The DB file image is saved to IndexedDB (`backend/storage.js`)
+         + after every request that wrote anything                       
+      10 +- **Offline**: `client/vite-plugin-sw.js` generates `dist/sw.js
+         +` from `client/sw-template.js` with a content-hashed precache l
+         +ist; `src/pwa.js` registers it (prod builds only) and drives th
+         +e "new version — reload" flow                                  
+      11 +- **Shared logic**: `shared/algorithm.js` — pure functions, imp
+         +orted by the backend and the UI                                
+      12  
+      13  ## Key commands
+      14  
+      15  ```bash
+      15 -# First-time setup                                             
+      16 -npm run install:all    # installs both server + client deps    
+      17 -npm run setup          # creates fitness.db + seeds exercise li
+         -brary                                                          
+      18 -                                                               
+      19 -# Development (two terminals)                                  
+      20 -npm run dev            # API server on :3001                   
+      21 -cd client && npm run dev   # Vite on :5173 with HMR            
+      22 -                                                               
+      23 -# Production                                                   
+      24 -cd client && npm run build && cd ..                            
+      25 -npm start              # serves API + built client on :3001    
+      16 +npm run install:all    # client deps (Node 20.19+; locally use 
+         +~/.nvm/versions/node/v22.12.0)                                 
+      17 +npm run dev            # Vite on :5173 (no service worker in de
+         +v)                                                             
+      18 +npm test               # all suites incl. client/src/backend/ba
+         +ckend.test.js (end-to-end, runs sql.js in Node)                
+      19 +npm run build          # client/dist — static site + sw.js     
+      20 +npm run preview        # serve the build to test install/offlin
+         +e                                                              
+      21 +npm run icons          # regenerate PNG icons from the barbell 
+         +geometry                                                       
+      22  ```
+      23  
+      24 +Deploy: `.github/workflows/pages.yml` builds + publishes `clien
+         +t/dist` to GitHub Pages on push to master.                     
+     … 86 more lines (ctrl+o to expand)
+
+⏺ Bash(sed -i '' 's#`server/setCounts.js`#`client/src/backend/setCounts.js`#;
+      s#the server writes the next-session#the backend writes the next-session#;
+      s#\*\*On every…)
+  ⎿  All 53 tests passed.
+     All 15 tests passed.
+     All 7 tests passed.
+     … +71 lines (ctrl+o to expand)
+  ⎿  Updated CLAUDE.md (+3 -3)
+      67  - `workout_plans` — named plans per user; `is_active` (one acti
+          ve at a time), `week_count`, `started_at`
+      68  - `plan_days` — which days of week (0=Mon…6=Sun) belong to a pl
+          an
+      69  - `schedule` — exercises per plan per day; `set_count` (a live 
+          mirror of the latest `set_counts` value), `position` for orderi
+          ng
+      70 -- `set_counts` — date-versioned set count per `(plan_id, day_of
+         -_week, exercise_id)`; append-only, `valid_from`. The effective 
+         -count for a session is the latest row valid as of the session's
+         - date. A manual +/− set records `valid_from = today`; an algori
+         -thm-appended set records `valid_from = session.date + 1`. Resol
+         -ve via `effectiveSetCount()` in `server/setCounts.js` — never r
+         -ead `schedule.set_count` directly for a session                
+      70 +- `set_counts` — date-versioned set count per `(plan_id, day_of
+         +_week, exercise_id)`; append-only, `valid_from`. The effective 
+         +count for a session is the latest row valid as of the session's
+         + date. A manual +/− set records `valid_from = today`; an algori
+         +thm-appended set records `valid_from = session.date + 1`. Resol
+         +ve via `effectiveSetCount()` in `client/src/backend/setCounts.j
+         +s` — never read `schedule.set_count` directly for a session    
+      71  - `set_targets` — target weight + reps per exercise per set; `v
+          alid_from` date + `plan_id`; the algorithm writes a new row per
+           completed exercise. `is_suggestion` is a legacy flag (no longe
+          r written)
+      72  - `sessions` — identified by `(plan_id, week_num, session_dow, 
+          user_id)` UNIQUE; `checked_in` (= "complete"), `unlocked` flags
+      73  - `logged_sets` — actual logged weight/reps per set; `skipped` 
+          flag; `reps_done` NULL when skipped
+     ...
+      75  ## Important conventions
+      76  
+      77  - `day_of_week` is **0=Monday … 6=Sunday** throughout (not JS c
+          onvention where 0=Sunday)
+      78 -- Logging a set re-runs progression for that exercise: the serv
+         -er writes the next-session `set_targets` rows with `valid_from 
+         -= session.date + 1 day`                                        
+      78 +- Logging a set re-runs progression for that exercise: the back
+         +end writes the next-session `set_targets` rows with `valid_from
+         + = session.date + 1 day`                                       
+      79  - `set_targets` and `set_counts` are append-only — never update
+          , always insert a new row
+      80  - Set-count changes propagate forward only: a completed session
+           always resolves to the count it had, never one added later
+      81  - Sessions are position-based (week_num, session_dow), not date
+          -based
+     ...
+      111  1. User navigates to a slot (week_num, session_dow) via the To
+           dayPage calendar.
+      112  2. Slot endpoint (`GET /sessions/slot`) finds or creates the s
+           ession; returns `is_current` + `is_locked`.
+      113  3. User logs sets via SetRow components → `POST /sessions/:id/
+           sets` (upserts). `DELETE` un-logs.
+      114 -4. **On every set change** the server runs `recomputeExercise`
+          -: when an exercise's sets are all logged/skipped it writes the
+          - next session's `set_targets`; when no longer complete it dele
+          -tes them. `updateCompletion` sets `checked_in` when the whole 
+          -day's schedule is logged/skipped. No modal, no check-in.      
+      114 +4. **On every set change** the backend runs `recomputeExercise
+          +`: when an exercise's sets are all logged/skipped it writes th
+          +e next session's `set_targets`; when no longer complete it del
+          +etes them. `updateCompletion` sets `checked_in` when the whole
+          + day's schedule is logged/skipped. No modal, no check-in.     
+      115  5. The client derives `allDone` from set statuses; a completio
+           n effect refreshes the calendar and may surface the end-of-pla
+           n modal.
+      116  6. **Unlock**: a completed session can be unlocked (`POST /ses
+           sions/:id/unlock`) — deletes the next-day targets, sets `unloc
+           ked=1, checked_in=0`. It re-becomes "current". Re-logging re-r
+           uns progression.
+      117  
+
+⏺ FitnessTrack is now a static PWA. There's no server or Docker container any
+  more: the whole app, including its SQLite database, runs on the phone and
+  works offline. Nothing is committed or pushed yet.
+
+  How it works
+
+  - Same logic, now running on the phone. The Express routes moved into
+    client/src/backend/ with almost no changes. They run in the browser against
+    SQLite compiled to WebAssembly (sql.js), through a small wrapper that mimics
+    better-sqlite3. That's why the progression algorithm, recap, stats and
+    migrations are untouched.
+  - Saving: after every change, the database is written to the browser's
+    on-device storage (IndexedDB) before the app shows the update. Database
+    migrations run every time the app opens.
+  - Offline: a service worker is generated at build time and caches the entire
+    app, so it launches with no connection. When you deploy a new version, the
+    installed app shows a "New version ready — tap to reload" bar.
+  - No passwords: the first screen asks for a name and avatar, or lets you
+    restore a backup.
+  - Backups: Setup → Data has Export and Import. On phones these use the share
+    sheet, which offers Save to Files or Drive.
+  - Removed: the server, Docker files, systemd unit, setup/update scripts, and
+    the in-app git pull updater.
+
+  Verified
+
+  - All existing test suites pass, plus a new 13-test end-to-end backend test
+    that runs real SQLite in Node. It covers logging sets, progression, unlock,
+    stats/CSV, export and import, reset/restore, and reopening from storage.
+  - I drove the production build in headless Chrome at phone size:
+    - Creating a profile and activating a plan worked, and the workout screen
+      rendered fully.
+    - A logged set survived a reload.
+    - With the network turned off, the app relaunched, a change made offline was
+      saved, and it was still there after another offline reload.
+
+  I couldn't test on a real iPhone or Android device; the share-sheet export and
+  the home-screen install are the parts that only a real phone will confirm.
+
+  What you need to do
+
+  1. Host it once over HTTPS. Service workers won't run on a plain http:// LAN
+     address. I added .github/workflows/pages.yml: turn on repo Settings → Pages
+     → Source: GitHub Actions, then push to master. It runs the tests and
+     deploys to https://<user>.github.io/FitnessTrack/. Any static host works
+     too, since all paths are relative.
+  2. Install it: iPhone: Safari → Share → Add to Home Screen. Android: Chrome →
+     Install app.
+  3. Bring your existing data across:
+     - Stop the container so SQLite folds its write-ahead log into the main
+       file.
+     - Copy the database out: docker compose cp app:/data/fitness.db .
+     - Get the file onto your phone, then choose Restore from a backup file on
+       the welcome screen.
+     - If the old database had several accounts, the app asks which one is
+       yours.
+
+  Things to know
+
+  - Your data exists only on that phone. Deleting the app or clearing the
+    browser's site data deletes it, so export backups regularly. There's no sync
+    between devices.
+  - Dates are still in UTC, as they were on the server. In the Americas, an
+    evening session can be dated the next day. This was true before too; I
+    didn't change it.
+  - Two open tabs don't share data: each keeps its own copy, and whichever saves
+    last overwrites the other. That shouldn't come up with a single installed
+    app.
+  - Node version: Vite 8 needs Node 20.19 or newer, and your default node is
+    v15. I used ~/.nvm/versions/node/v22.12.0.
+
+  I bumped the version to 2.0.0 and updated the README, CHANGELOG and CLAUDE.md.
+
+✻ Churned for 12m 49s · done 6:02 PM
+
+※ recap: FitnessTrack is now an offline PWA with no server, tested in headless Chrome but not yet on a real phone, and nothing is committed. Next, turn on GitHub Pages (Settings → Pages → Source: GitHub Actions), then push to master. (disable recaps in /config)

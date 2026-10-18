@@ -1,0 +1,426 @@
+# Changelog
+
+## [2.0.0] - 2026-10-18
+
+### Changed
+- **FitnessTrack is now an installable, offline-first PWA — no server or Docker container needed.** The whole app, including its SQLite database (via WebAssembly), runs on your phone. Add it to your home screen and log workouts with no connection; data is saved on the device after every change. The progression algorithm and all features are unchanged.
+- **No accounts or passwords.** First launch asks for a name and avatar; the data lives only on your device.
+- **Updates arrive through the app.** Installed copies pick up new deploys in the background and offer a one-tap reload ("Setup → App → Check for updates" checks on demand). The server-side `git pull` updater is gone.
+
+### Added
+- **Backup & restore** (Setup → Data): export the database as a `.db` file via the share sheet / download, and import it on any device. Import also accepts the `fitness.db` from the old self-hosted server, so you can bring your history across.
+- **Restore pre-reset backup**: "Reset all training data" keeps the previous database on the device, restorable from Setup → Data.
+- **GitHub Pages deployment** workflow (`.github/workflows/pages.yml`) — the build is a static site that works from any static host.
+
+### Removed
+- The Express server, Dockerfile/docker-compose, systemd unit and platform setup/update scripts.
+
+---
+
+## [1.7.5] - 2026-07-09
+
+### Changed
+- **Logging a set with the reps field blank now records the recommended reps.** Tapping the ✓ without typing a rep count logs the recommendation shown in the placeholder (the weight-adjusted target) and fills it into the field, so you can log a set that went to plan with a single tap. The ✓ now activates only when *both* weight and reps hold a usable value — typed or available as a recommendation — so it stays disabled for a set with no target weight, or an out-of-band weight whose rep target shows "?".
+
+---
+
+## [1.7.4] - 2026-07-08
+
+### Changed
+- **The recap headline is now volume-aware.** A "lifts up" session whose total tonnage dropped notably (≥5%) — typically a weight bump with reps reset — no longer reads as a clean green "Strong session". It's reframed as "Solid session — N lifts heavier, but volume down", so the headline agrees with the ▼ volume delta and the downward sparkline instead of contradicting them. Genuinely strong sessions (lifts up *and* volume up) are unaffected, and a rough session still reads "Tough".
+
+---
+
+## [1.7.3] - 2026-07-03
+
+### Fixed
+- **Personal Bests now shows the best reps at your heaviest weight.** When an exercise's top weight was hit at several rep counts (e.g. 41 kg × 10, × 11 and × 12), the table collapsed to an arbitrary row — often understating it (showing 41×10 instead of your 41×12). It now reports the most reps logged at that weight, in both the Stats table and the CSV export.
+
+---
+
+## [1.7.2] - 2026-07-03
+
+### Fixed
+- **The recap's session-volume delta no longer flattens a small change to "0%".** A sub-1% week-on-week change (e.g. +0.4%) was rounded to a whole percent and shown as a grey "→ 0%", hiding a genuine gain. The arrow and colour now follow the true sign, and the figure shows one decimal below 1% (e.g. "▲ +0.4%") and a clean integer at or above it.
+
+---
+
+## [1.7.1] - 2026-07-03
+
+### Fixed
+- **A lift where you met or beat the target on every set is no longer marked red in the recap.** Its week-on-week "down" now floors to "held" — fixing the case where lower sets get heavier and their reps reset, so total volume dips even though every prescribed set was hit. It's the mirror of the 1.7.0 target-aware ceiling.
+
+### Changed
+- **The hero ring now shows a red arc for "down" lifts, matching the segmented bar.** The ring draws consecutive verdict arcs — green up, amber held/eased, red down — instead of lumping down/eased into the grey remainder, so a red lift reads red in both the ring and the bar.
+
+---
+
+## [1.7.0] - 2026-07-02
+
+### Changed
+- **Recap verdicts are now target-aware.** A lift that beat last week on volume but fell short of its prescribed target on *every* set is no longer counted as a win — its week-on-week "up" is capped to "held". This keeps the recap consistent with the workout card's per-set ▼ glyphs (which compare against the target you were given), so a session where the targets climbed faster than you did no longer reads as a clean "up" on a lift you missed on every set.
+- **Held lifts read amber in the recap.** The hero ring now draws an amber arc for held lifts immediately after the green "up" arc (over the grey remainder), and the per-lift segmented bar shows held segments in amber instead of dimmed grey.
+- **"Overall" prefix on the recap reps highlight.** The "+N reps over last week" line is now bolded and prefixed with "Overall" so it reads as a session-wide total rather than a note about the exercise in the highlight above it.
+
+---
+
+## [1.6.5] - 2026-06-12
+
+### Fixed
+- **Average workouts/week no longer over-counts.** `avg_per_week` divided total workouts by the first→last-day span, which ends on the last workout rather than the end of its week — so a clean 4-per-week pattern read ~4.2. It now counts distinct Monday-anchored training weeks (the same `WEEK_OF` the weekly chart uses), giving the true 4.0.
+- **"Progress by Muscle Group" now admits a fully-trained current week.** The comparison week was gated on the calendar week being fully elapsed, so a week finished early (e.g. all sessions done by Friday) was withheld until the following Monday and the comparison stayed stuck on the prior week. The current week is now admitted once every session in it is complete and it has at least as many sessions as the last fully-elapsed week. (Boundary logic extracted to a unit-tested `server/statsWeeks.js`.)
+- **Logged bodyweight now persists forward for bodyweight exercises.** Progression carried the prior target weight forward and discarded the logged bodyweight, so the TodayPage bodyweight input (seeded from `set_targets`) never reflected the user's last logged bodyweight (e.g. a stuck 88.2 kg). It now stores `weight_used` (when > 0), self-healing on the next logged session.
+- **Progression hint now surfaces for algorithm-appended sets.** An appended set (e.g. a paused-weight exercise that earned an extra set at the rep floor) has no prior logged session, so it was dropped from the overload hint and the whole hint could collapse to null. Appended sets now count toward current volume/reps, so the added work shows up as overload feedback.
+
+---
+
+## [1.6.4] - 2026-06-08
+
+### Added
+- **"Progress by Muscle Group" panel on the Stats page** — below "Volume by Muscle Group", each muscle group shows its volume change from the first recorded week to the most recent *completed* week (the current, in-progress week is excluded), following the All time / This plan scope. Weeks are Monday-anchored, so for a plan that repeats the same exercises each week it's a clean like-for-like comparison. The panel hides when the period has fewer than two completed weeks.
+
+---
+
+## [1.6.3] - 2026-06-08
+
+### Changed
+- **"Pause weight increases" is now a weight *cap*, not a freeze-to-max.** Activating it records a cap equal to the heaviest set on the card and leaves every set's own weight untouched (previously it rewrote all sets to the max). Progression then continues normally but never above the cap — lighter sets climb toward it, reps keep progressing, and a set pinned at the cap holds at the rep ceiling. Backed by a new `pause_cap_kg` setting; legacy paused exercises (no stored cap) keep the old reps-only freeze.
+
+### Fixed
+- **Per-set glyph no longer mis-flags a matched target after a small weight change.** Logging the weight-adjusted target the card shows (e.g. 35×8 against a 36×8 prescription) read as ▼ because the glyph compared exact volume against the un-rounded original target. It now tolerates the whole-rep rounding of the displayed target (±half a rep), so hitting the shown target reads "=".
+- **Recap was inconsistent with the exercise cards.** Paused exercises were rendered reps-only in the recap (e.g. "11 → 10 reps ▼") while the card shows them as weighted — they're now treated as weighted in the recap too. The lift-by-lift "top set" also no longer stitches the heaviest weight to the highest reps from a *different* set (e.g. a never-performed "40×12"); it shows an actually-performed set.
+
+---
+
+## [1.6.2] - 2026-06-04
+
+### Added
+- **Recap link on the all-done banner** — completed workouts now show a small "Recap" link to the right of the "All done" banner that re-opens the week-on-week recap sheet for that session, including past/read-only sessions where the recap didn't auto-show.
+
+---
+
+## [1.6.1] - 2026-06-03
+
+### Added
+- **Hover/tap detail on the exercise-card history chart** — the per-exercise history graph now draws a guide line, a highlighted point, and a detail box (date · volume or top weight · set count) on hover or tap, matching the interaction already on the Stats page charts.
+
+---
+
+## [1.6.0] - 2026-06-03
+
+### Added
+- **Post-workout recap** — finishing a session surfaces a week-on-week summary sheet comparing it to the same slot last week: an adaptive verdict-driven headline (encouraging even on a rough week), a "lifts up" ring, a per-lift verdict bar (up / held / down / eased off), the session's volume delta with a multi-week sparkline, muscle-group accents, new-best and biggest-jump highlights, adaptive-tempo call-outs, and a lift-by-lift `last → this` breakdown. Numbers count up on open; the sheet slides in and honours `prefers-reduced-motion`. Falls back to an earlier completed week, or a baseline message the first time through. Backed by a new `GET /api/sessions/:id/recap` endpoint and a pure, unit-tested verdict module (`shared/recap.js`).
+
+---
+
+## [1.5.0] - 2026-06-02
+
+Progression-algorithm overhaul — safer, self-regulating, and more honest about what it's doing.
+
+### Added
+- **Adaptive progression tempo** — progression speed self-tunes from recent performance, with no subjective input. Beating an exercise's targets two sessions running shifts it **faster** (reps climb +2, weight bumps take a larger step); falling short two sessions running shifts it **slower** (weight changes shrink to the smallest step). Derived purely from logged volume (weight × reps) versus target.
+- **Typo guard** — logging a weight far off the target (>25%) or an implausibly high rep count now prompts a confirmation, so a mis-tap can't silently derail the next session's targets.
+
+### Changed
+- **Underperformed sets hold at the reps you logged**, not the target you missed. Previously a set short of target was re-issued the original target, so a large miss produced an *upward* jump (e.g. logging 10 against a target of 15 → next target 15). Now the set holds at what you actually logged and must be beaten before the target advances — for both weighted and bodyweight exercises.
+- **Descending-weight clamp** — per-set progression can no longer prescribe a later set heavier than an earlier one. A set that earns a weight bump an earlier (lighter) set hasn't yet parks at the top of its range and waits; the sets then advance together. Keeps the per-set weights a coherent, non-increasing profile.
+- **Deload now requires two strikes** — dropping below the bottom of the rep range no longer eases the weight off after a single session. One bad day holds the weight and re-attempts; the weight only drops after a second consecutive sub-floor session.
+
+### Fixed
+- **Progression hint hid per-set deloads.** The weight-change figure only inspected the heaviest previous set, so a deload on a lighter set was invisible and its extra rep showed as clean green "+1 rep" progress. The hint now surfaces the largest per-set weight change and renders a deload in amber (caution), not green.
+
+### Internal
+- `recomputeExercise` is exported and computes the history-derived signals (adaptive tempo, prior-floor-miss) server-side, passing them into the now-pure `nextExerciseTargets`. Stored forward targets are regenerated through this same path — no duplicated logic. Progression-hint logic extracted to a unit-tested `computeProgressionHint`; algorithm suite expanded to 46 cases.
+
+---
+
+## [1.4.1] - 2026-05-29
+
+### Added
+- **Reps-only progression hint** for bodyweight exercises, plus **overflow spill** — reps logged above the ceiling on one set carry into the next.
+
+### Fixed
+- Progression now uses a **volume comparison** (weight × reps) rather than a rounded rep count, so logging heavier for the same reps registers as a beat; the per-set glyph uses the same comparison.
+- A weight increase shows a green ▲ rather than a red volume-drop arrow — a bump resets reps, which isn't a regression.
+- Draft auto-fill no longer overrides advancing targets with stale values.
+- Stale `set_targets` reps are clamped to the rep range in the hint and rep placeholder.
+
+---
+
+## [1.4.0] - 2026-05-20
+
+### Added
+- **Optimal sets** — a per-user ceiling on auto-added sets, replacing the fixed default; bodyweight progression adds sets up to this limit.
+- **Unsaved weight/reps persist to localStorage** and restore on reload, so an interrupted log isn't lost.
+
+### Fixed
+- Five algorithm edge-case fixes, with an expanded algorithm test suite and mobile layout fixes.
+- Bodyweight pre-fill now propagates forward via `set_targets` rather than global localStorage.
+- Pause-weight freeze uses the highest weight currently shown on the card.
+
+---
+
+## [1.3.1] - 2026-05-19
+
+### Added
+- **Date-versioned set counts** — set-count changes propagate forward only, so a completed session always resolves to the count it had, never one added later.
+- **Weight-deviation rep re-targeting** — when the loaded weight differs from the target, the rep target re-scales to roughly preserve volume (within a ±15% band).
+
+### Fixed
+- Per-set target/glyph timing: targets are bounded by session date (not the checked-in flag), the glyph no longer shifts after a session completes, the completion count excludes only the unlogged appended set, and a session is correctly checked in after a reps-only exercise adds a set.
+- Manual set-count changes routed through the `set_counts` table; adding a set copies the previous set's weight; logging is blocked with an empty weight.
+- Secure-cookie flag derived from the request protocol, with a `SECURE_COOKIES=false` override.
+
+---
+
+## [1.3.0] - 2026-05-16
+
+### Changed
+- **Dynamic double progression** replaces the subjective check-in system. Progression is purely performance-based: each set is its own track — reps climb toward the rep-range ceiling, then weight increases and reps reset to the floor. The pain / recovery / pump / intensity check-in modals are gone; logging a set immediately re-derives the next session's targets.
+- **Rep ranges are per exercise** (`rep_min`/`rep_max`) and editable, rather than a fixed global range.
+- **Exercise properties are editable inline** — an edit (✎) button on each exercise card and plan row opens a shared editor for name, muscle group, equipment, increment, rep range, set count and pause state.
+- **Exercise card redesign** — the muscle-group badge is now a tab straddling the card's top edge; the name gets its own row so long names no longer crowd the action buttons.
+
+### Added
+- **Pause weight increases** — a per-exercise setting that freezes the load and progresses through reps and added sets only (for limited plates or injury recovery). Surfaced as an orange pause icon on the card; tap to resume.
+- **Per-user exercise overrides** — rep range, weight increment and pause state are stored per user, so one account's tuning doesn't affect another's.
+- **Volume / weight toggle** in the exercise history chart.
+- **Bodyweight Bests** — bodyweight exercises now have their own Personal Bests list ranked by max reps, instead of dominating the weight-ranked list with their logged bodyweight.
+
+### Fixed
+- Setup page rendered a blank screen due to an undefined `ALL_EQUIPMENT` reference.
+- Algorithm now bootstraps from the first logged session; legacy `is_suggestion` rows are never used as targets.
+- Per-set performance glyphs no longer show on first-time sets with no prior history.
+- History modal Peak/Latest values rounded to 0.1 precision.
+- Data reset also wipes legacy null-user plans and fully orphaned set targets.
+
+### Security
+- Route ownership checks, rate limiting, HTTPS-only auth cookie, and an N+1 query fix.
+
+---
+
+## [1.2.0] - 2026-05-02
+
+### Changed
+- **Session-date semantics rewritten** to better match how a workout actually unfolds. The new rules:
+  - **Blank session** (no logged or skipped sets): `session.date` is `NULL`. The header displays *today's* date and re-evaluates on every page reload — useful when you open the app on a new day before logging anything.
+  - **First log/skip**: stamps `session.date = today`. Locked while in-progress.
+  - **All sets unlogged again**: `session.date` clears back to `NULL` and the displayed date resumes floating to today. Lets you "undo" before any real work has happened.
+  - **Finalized** (`checked_in = 1` or `unlocked = 1`): `session.date` is locked permanently. Subsequent unlocks, edits, re-logs do not move the date — the workout's real date stands.
+- All logged-set rows in a session continue to inherit their completion date from `session.date` for stats and history. With the new rules, edits to a finalized session never re-date its sets.
+
+### Fixed
+- Slot creation no longer pre-stamps `session.date = today` at the moment of navigation. Previously this caused stats to show stale dates for sessions opened in advance.
+
+### Migration
+- One-time, idempotent: clears `session.date` for all rows that are currently blank and never finalized. Sessions with logs or that have ever been finalized are untouched.
+
+---
+
+## [1.1.10] - 2026-05-02
+
+### Changed
+- **Top nav mobile usability.** The top-of-app strip (brand, nav tabs, user dropdown) had sub-44px tap targets, especially the user trigger. Workout / Plans / Stats links are now 44px tall, the user dropdown trigger is 44px, dropdown menu items are 48px, the dropdown is wider (140→180px), and the brand strip + barbell mark are slightly larger. No font, color, or border-radius changes.
+
+---
+
+## [1.1.9] - 2026-05-02
+
+Mobile usability pass across every page. Same dark theme, same rounded-corner aesthetic — just bigger taps, less wrapping, and proper vertical rhythm in modals.
+
+### Changed
+- **Check-in modal** is now a bottom sheet. Each field's label stacks above its options instead of fighting them for horizontal room — `Never sore` / `Still sore` / `Healed` no longer wrap. All option buttons 46px+ tall. `Pause weight increases` checkbox on its own row. Submit button is now full-width 48px (used to wrap to two lines).
+- **Add Exercise modal**: bigger close ✕ (40×40), exercise list rows 52px+ with overflow-elided name and color-coded muscle tag, sets buttons in a 5-col grid at 46px, reps in 4-col at 46px, wider 120px starting-weight input, 48px full-width Add button. Custom-exercise creation chips also bigger.
+- **Plan day-card slot rows** went from 36px to 52px with the exercise name on its own line, sub-row containing colored muscle tag + set/weight info, and a dedicated 40×40 delete ✕ tap area. `+ Add` 28→36px. Workout-day toggle (Mon/Tue/Wed…) is now a 7-col grid of 44px chips instead of variable-width chips that wrapped to a second row.
+- **Plans list**: `+ New` 28→40px. Per-card action row (Edit / Clone / Delete / Activate) 32→46px. All Cancel/Create/Clone/Delete modal buttons full-width 48px. Clone modal week options 52px tall. New-plan day picker is a 7-col 44px grid.
+- **Stats page**: `All time` / `This plan` and `Volume` / `Max weight` toggles 24→38px. Exercise selector 30→46px with 16px font. Export rows show description with proper line-height; the `Download CSV` button shrank to a tidy 40px `CSV` chip. `Reset training data…` 28→44px. Reset modal: 48px buttons, 46px input, larger close ✕.
+- **Auth page**: tab buttons 36→48px, submit 38→48px, fields 32→46px with 16px font. Glyph picker: 8 cramped columns of 32px buttons → 6 columns of square aspect-ratio buttons at 44px+.
+- **Profile page**: same field/glyph/save treatment as Auth.
+- **Setup page**: equipment toggle rows 36→52px with bigger checkboxes. `kg`/`lbs` 32→44px. Training preferences row, the worst offender (label + 3 + 3 squashed buttons all ~24px on one line), restructured into per-muscle-group cards with `REP RANGE` and `PROGRESSION` as separate labelled rows of 3-col 40px buttons. Custom-exercise rows 36→52px with stacked name+meta, color-coded muscle tag, dedicated 40×40 ✕ delete area, bigger Edit chip. Update / Reload / Dismiss buttons all 40+px. Edit-exercise modal restyled to match the new chip standards.
+- **Today page**: skip-session and finish-confirm modal buttons full-width 48px. Day-picker plan-length `+`/`−` controls 26→36px square.
+
+---
+
+## [1.1.8] - 2026-05-01
+
+Major robustness pass on the workout-session lifecycle. Per-set state is now lifted into a single parent-managed Map (`setStatuses`) instead of being scattered across SetRow's local state, the `liveValues` ref, `doneSet`, and `initials`. SetRow is now a controlled component. Multiple stale-state-after-reload bugs are gone as a result.
+
+### Fixed
+- **Finish Workout silently bypassing the algorithm.** `slotDone` previously considered a session done if `done_sets >= expected_sets`, even with `checked_in = 0`. After Finish-Workout-into-skip, the slot rolled over without check-ins ever firing — the algorithm never ran and `set_targets` were never written. `slotDone` now requires `checked_in === 1` (in both `routes/sessions.js` and `routes/plans.js`).
+- **Finish Workout not firing check-in modals on the resulting reload.** `handleConfirmFinish` now clears `dismissedGroups` before the slot reload so the auto-checkin effect picks up immediately.
+- **Mixed groups (some logged, some skipped) not consistently triggering check-ins.** The previous `groupHasLoggedSets` predicate read from `liveValues`, a ref that was empty after every reload (SetRow's `onValuesChange` effect didn't re-fire). It now reads from server-truth via `setStatuses`.
+- **`onCheckin` reload trigger waiting on every group.** It now waits only on groups that actually need a check-in (i.e., have at least one logged set). All-skipped groups don't block lock-in.
+- **Unlock spamming every check-in modal immediately.** `loadSlot` now pre-dismisses done groups when `sess.unlocked === 1`. Modals only fire after the user actively engages with a set.
+- **Re-engagement after unlock not opening modals.** `handleLog` and `handleClear` now call `markGroupActive` to remove the affected group from `dismissedGroups`, so re-completing the group fires the modal.
+- **Unlock → untick → Finish requiring two Finish presses to lock.** `handleConfirmFinish` now sets a one-shot `skipPreDismissOnceRef` flag so the post-Finish reload does not re-apply the unlocked-session pre-dismiss. Single Finish press now drives the full check-in flow.
+- **Logged weight not restored on reload.** Previously SetRow showed the *target* weight after reload even for logged sets. `loadSlot` now overlays the per-set `weight_used` from `logged_sets` into `setStatuses`.
+- **Editing one set in a checked-in group unticking the rest.** `onResetCheckin` no longer resets every set in the group — it only deletes the server-side check-in row + clears the group's local check-in flag. Other sets in the group stay logged.
+
+### Changed
+- **`SetRow` is now a controlled component.** Its `status` / `weight` / `reps` come from props; it has no local state, no refs, no internal effects. All mutations flow through parent callbacks (`onClickTick`, `onClickUndo`, `onWeightChange`, `onRepsChange`).
+- **Internal: `doneSet`, `liveValues`, `exerciseResetCounters`, and the `initials` map are removed** in favour of a single `setStatuses: Map<string, { status, weight, reps }>` in the parent. `groupIsDone` and `groupHasLoggedSets` derive from it.
+- **`preDismissed` only runs on past slots or unlocked sessions** (not on the current slot in normal flow).
+
+---
+
+## [1.1.7] - 2026-05-01
+
+### Fixed
+- **Check-in modal firing for muscle groups whose sets are all skipped.** Finishing a workout (or manually skipping every set in a group) used to trigger the pain / recovery / pump / intensity modal for that group, even though there was nothing to give feedback on. The modal now only fires for groups with at least one real logged set, and the server's "session fully checked in" condition is correspondingly relaxed to ignore all-skipped groups, so sessions are still marked done after only the trained groups have been checked in.
+
+---
+
+## [1.1.6] - 2026-05-01
+
+### Changed
+- **Weekly Volume chart now labels bars with the full week range** (`Apr 27–May 3` instead of `Apr 27`). The bar always was the Monday-anchored week, but the bare Monday date was easy to misread as "the workout was on April 27" when the workout was really on Friday May 1 in the same week.
+
+### Fixed
+- **Check-in / unlock date mismatch.** Check-in wrote `set_targets.valid_from = today + 1`, while unlock's cleanup deleted `WHERE valid_from = session.date + 1`. If the session's date had drifted from "today" (possible before 1.1.5), unlock would silently fail to remove the next-day targets and the user would see stale numbers. Both paths now anchor on `session.date + 1 day`, so they always match.
+
+---
+
+## [1.1.5] - 2026-05-01
+
+### Fixed
+- **Sets logged today appearing under an old date in Stats.** A session's `date` was stamped when the row was first created — i.e., when you first navigated to that slot — not when sets were actually logged. If you opened a slot on day X and didn't log into it until day Y, every set in that session showed under day X in Stats. The session's date is now stamped on the first real log into it (insert path only — editing an already-logged set won't shift the date).
+
+---
+
+## [1.1.4] - 2026-05-01
+
+### Changed
+- **In-app updater is now resilient to local file drift on the deployment box.** The updater previously ran `git pull`, which aborted when files like `client/package-lock.json` had been regenerated locally (typical when `npm install` rebuilds native deps such as `better-sqlite3` on ARM). It now runs `git fetch origin && git reset --hard origin/master`, force-syncing the working tree to remote `master` on every update.
+
+---
+
+## [1.1.3] - 2026-05-01
+
+### Fixed
+- **Untick / edit of logged sets not persisted** — clicking a logged set's tick to clear it, or editing its weight/reps after logging, only flipped the row to "idle" in the React state and never told the server. Reloading the page re-hydrated from `logged_sets` and the rows reappeared as logged. The client now calls a new `DELETE /api/sessions/:id/sets/:exercise_id/:set_num` endpoint when transitioning a set out of the logged or skipped state, and serializes any pending unlog before the next log/skip POST so a fast edit-then-retick can't race.
+
+---
+
+## [1.1.2] - 2026-05-01
+
+### Fixed
+- **Mobile auto-zoom on Add Exercise modal** — inputs and selects in the modal had no explicit `font-size`, so iOS Safari (and Firefox iOS / mobile browsers with the same heuristic) auto-zoomed the page when the search field gained focus. Inputs now render at 16px, suppressing the focus zoom.
+
+### Added
+- **Workout cell shortcuts** — clicking into a weight or reps cell now selects its existing contents so you can immediately overwrite. Pressing **Enter** with both fields filled (or just reps for bodyweight exercises) ticks the corresponding log box.
+
+### Removed
+- Unused `client/src/pages/SchedulePage.jsx` — superseded by `PlanDetailPage` and no longer routed.
+
+---
+
+## [1.1.1] - 2026-04-30
+
+### Added
+- **CSV export** in the Stats page — four downloads, all scoped to the current All time / This plan filter:
+  - **Exercise history** — one row per exercise per session (sets done, max weight, total volume)
+  - **Session summary** — one row per workout (exercises, sets, total volume)
+  - **Personal bests** — highest weight ever logged per exercise with rep count and date
+  - **Weekly volume** — sessions, sets, and total volume by calendar week
+
+### Fixed
+- Unmatched `/api/*` paths now return a `404` JSON error instead of falling through to the SPA catch-all. Previously, requests to missing API endpoints silently received `index.html` with a 200 status.
+
+### Changed
+- Default weight increment for dumbbell exercises reduced from 2 kg to 1 kg. Existing non-custom dumbbell exercises in the database are updated automatically on next server start.
+
+---
+
+## [1.1.0] - 2026-04-30
+
+### Added
+- **Unlock previous session** — the session immediately before the current slot can be unlocked for re-logging. Unlocking removes check-ins and the next-day targets written by those check-ins, so re-logging and re-checking-in produces a fresh set of targets.
+
+### Fixed
+- **Finish Workout after unlock** — when a session was unlocked and all sets were already pre-marked as logged, pressing Finish Workout did nothing. It now detects that check-ins are still pending and re-triggers the check-in flow.
+- **Session locking after re-check-in** — after completing all check-ins on an unlocked session, the page now correctly transitions to read-only mode. Previously the `isCurrent` flag was stale and the session remained editable.
+
+### Changed
+- UI contrast raised to meet WCAG AA minimums: `--dim` lightened from `#777` to `#9a9a9a`; chest/triceps and legs muscle-group accent colours brightened; badge background opacity reduced to improve legibility.
+
+---
+
+## [1.0.9] - 2026-04-30
+
+### Changed
+- **Exercise-level algorithm** — progression is now decided across the full set cluster rather than independently per set. The heaviest active set drives the weight-bump trigger; the worst-performing set drives the hold/reps decision. Changes are applied proportionally to all sets, preserving pyramid and drop-set structures. Weights rounded to nearest 0.5 kg.
+- **`weight_used` as base** — the algorithm now uses the weight the user actually loaded (not the previous target) as the starting point for the next session's recommendation. If a user deviated from the target, that deviation carries forward.
+- **Volume display** — the per-set progression hint is replaced with a single exercise-level volume indicator at the bottom of each card: `▲ 2475 kg·reps (+3%)` or `▼` in red for a reduction. Computed as `Σ(weight × reps)` across all sets, current targets vs previous.
+
+## [1.0.8] - 2026-04-30
+
+### Added
+- **Per-muscle-group training preferences** in the Setup page — each muscle group now has two independent settings:
+  - **Rep range**: 5–8 (powerlifting) / 8–12 (standard, default) / 12–15 (volume) — controls when weight progression triggers and the deload reset floor
+  - **Speed**: Slow / Normal / Fast — scales how strongly positive check-in signals (too easy, never sore, good pump) amplify progression; negative signals (pain, too much, still sore) always apply at full strength
+- `muscle_group_settings` DB table (auto-migrated); defaults to standard / moderate for all muscle groups
+
+### Changed
+- Rep range and aggressiveness are now orthogonal settings — low reps no longer implies fast progression or vice versa
+- Algorithm previously used a single `aggressiveness` enum that conflated rep range with progression speed; these are now separate dimensions
+
+## [1.0.7] - 2026-04-30
+
+### Added
+- **Intensity check-in row** — "Too easy / Just right / Too much" replaces guesswork about load; feeds directly into the next-session modifier (+2 / 0 / –2).
+- **"Pause weight increases" checkbox** in the check-in modal — locks the weight for that muscle group's sets while still allowing rep/set adjustments.
+- **Percentage-aware weight increments** — the effective increment is now capped at 10% of working weight (floor 1.25 kg), so light isolation exercises no longer jump by unrealistic amounts.
+- **Pain as a safety gate** — high pain now holds all targets unchanged (no progression at all); medium pain blocks weight increases while still allowing rep adjustments.
+- **Deload trigger** — a combined modifier of ≤ –3 (e.g. too_much + still_sore + low pain) drops weight 10% and resets to the bottom of the rep range instead of just holding.
+- **Per-call aggressiveness tier** — `nextSetTarget` now accepts `aggressiveness: 'conservative' | 'moderate' | 'aggressive'`, changing the rep range (10–15 / 6–12 / 5–8) and therefore when weight progression triggers.
+
+### Changed
+- **Recovery buttons reordered** — now: Never sore → Still sore → Healed (removed "Just in time").
+- **Recovery scoring updated** — "Healed" now scores 0 (was +1); "Never sore" stays +1. Healed is expected recovery; never sore signals under-stimulation.
+
+## [1.0.6] - 2026-04-30
+
+### Fixed
+- In-app update no longer hangs on "pulling and rebuilding" after a successful build. The polling loop now handles `state=idle` (server restarted with fresh in-memory state) as a completion signal, and `waitForRestart` no longer requires a version change — it just waits for the server to respond, so updating when already on the latest version works correctly.
+
+## [1.0.5] - 2026-04-30
+
+### Fixed
+- In-app update: run `git config --global --add safe.directory <path>` before `git pull` — git ignores `safe.directory` passed via `-c` and only reads it from global/system config
+
+## [1.0.4] - 2026-04-30
+
+### Fixed
+- In-app update: pass `-c safe.directory=<path>` to `git pull` so it succeeds when the server process runs as a different user than the repo owner (common on Pi systemd installs)
+
+## [1.0.3] - 2026-04-30
+
+### Fixed
+- In-app update now uses the absolute path to `npm` (derived from the running node binary) so it works correctly when started via systemd, which has a minimal PATH that may not include `npm`
+- Update UI now polls a `/api/admin/update-status` endpoint during the build phase instead of blindly checking if the server is alive — errors from `git pull` or `npm run build` are shown directly in the UI rather than silently dropped
+- "Update complete" message now shows the new version number; error state shows the actual build output and a Dismiss button
+
+## [1.0.2] - 2026-04-30
+
+### Fixed
+- In-app update button now correctly restarts the server after rebuilding (`process.exit(0)` → `process.exit(1)` so systemd's `Restart=on-failure` fires)
+- Update progress UI now waits for the server to go down and come back with a changed version before declaring success, preventing false "done" on the still-running old process
+
+## [1.0.1] - 2026-04-30
+
+### Added
+- **Plan progress bar** — workout plan cards now show a minimalist progress bar with a completed/total day count, giving an at-a-glance view of how far through a plan you are.
+
+### Changed
+- **Position-based session model** — sessions are now identified by `(week_num, session_dow)` position within a plan rather than by calendar date. Dates are recorded only when a session is first opened. This allows plans to be paused and resumed without date drift.
+- **Sequential workout locking** — a session can only be started once the previous one is workout-complete (every exercise logged or skipped). Future sessions are visible in read-only mode.
+- **Workout completion logic** — a session is considered complete for unlocking purposes as soon as every exercise is either logged or skipped, without requiring a check-in.
+- **Clone flow** — cloning a plan copies structure and starting weights only; no sessions or logged data carry over. The seed-week picker lets you pick up weights from any completed week of the source plan so progress is not lost between cycles.
+
+### Fixed
+- **Calendar session status colours** — sessions where every exercise was skipped now appear orange (partial) rather than green. Sessions where every exercise has real logged data are green; fully-skipped sessions show a red ✗.
+- **`is_past` / `is_today` calendar fields removed** — the clone modal week-picker now uses actual session data to detect completed weeks instead of the stale date-based flags.
+
+## [1.0.0] - 2026-04-28
+
+- Initial release.

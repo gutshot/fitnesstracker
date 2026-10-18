@@ -1,0 +1,17 @@
+{
+  "name": "fitnesstrack",
+  "version": "2.0.0",
+  "type": "module",
+  "private": true,
+  "engines": {
+    "node": ">=20.19"
+  },
+  "scripts": {
+    "install:all": "cd client && npm install",
+    "dev": "cd client && npm run dev",
+    "build": "cd client && npm run build",
+    "preview": "cd client && npm run preview",
+    "icons": "cd client && node scripts/make-icons.mjs",
+    "test": "node shared/algorithm.test.js && node shared/recap.test.js && node client/src/backend/statsWeeks.test.js && node client/src/progressionHint.test.js && node client/src/backend/backend.test.js"
+  }
+}

@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FitnessTrack</title>
+    <meta name="theme-color" content="#181818" />
+    <meta name="description" content="Progressive overload workout tracker — works offline, data stays on your device." />
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+    <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="FitnessTrack" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+    <style>
+      :root {
+        --bg:        #0f0f0f;
+        --surface:   #181818;
+        --surface2:  #212121;
+        --surface3:  #2a2a2a;
+        --border:    #2c2c2c;
+        --text:      #ececec;
+        --muted:     #aaa;
+        --dim:       #9a9a9a;
+        --btn:       #ececec;
+        --btn-text:  #0f0f0f;
+        --success:   #4caf50;
+        --danger:    #e05555;
+        --input-bg:  #141414;
+        --checked-bg:#152015;
+
+        /* muscle group accent colours */
+        --mc-chest:     #f07098;
+        --mc-back:      #3cc9b0;
+        --mc-shoulders: #f0a030;
+        --mc-biceps:    #3cc9b0;
+        --mc-triceps:   #f07098;
+        --mc-legs:      #b088e8;
+        --mc-core:      #4caf50;
+        --mc-default:   #9a9a9a;
+      }
+      *, *::before, *::after { box-sizing: border-box; }
+      body { margin: 0; font-family: system-ui, sans-serif; background: var(--bg); color: var(--text); }
+      /* Installed app: no rubber-band pull-to-refresh, no grey tap flash. */
+      html, body { overscroll-behavior-y: none; -webkit-tap-highlight-color: transparent; }
+      button { cursor: pointer; }
+      select, input, option { color-scheme: dark; }
+      /* Hide native number-input spinners — they clash with the per-set
+         performance indicator and add nothing on a touch device. */
+      input[type=number]::-webkit-outer-spin-button,
+      input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+      input[type=number] { -moz-appearance: textfield; appearance: textfield; }
+      /* "All done" banner: full sentence on wider screens, trimmed to
+         "✓ All done." on phones. */
+      @media (max-width: 600px) { .ft-banner-full  { display: none; } }
+      @media (min-width: 601px) { .ft-banner-short { display: none; } }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="./src/main.jsx"></script>
+  </body>
+</html>
